@@ -1,6 +1,6 @@
 # CSE 322 — Cloud Computing Midterm Study Notes
 
-**Acıbadem Üniversitesi** · CSE 322 Cloud Computing
+**Acıbadem University** · CSE 322 Cloud Computing
 
 ## Live Site
 
