@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE 322 — Topic 2: Containers & Docker Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 1.75rem 0 0.75rem; }
+  h3 { font-size: 15px; font-weight: 600; margin: 1.2rem 0 0.5rem; }
+  p { font-size: 15px; line-height: 1.75; margin-bottom: 0.65rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+  li { font-size: 14px; line-height: 1.8; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #e8e8e4; padding: 2px 6px; border-radius: 4px; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 13px; overflow-x: auto; margin: 0.75rem 0; font-family: 'SF Mono', monospace; line-height: 1.6; }
+  hr { border: none; border-top: 1px solid #e0e0d8; margin: 1.75rem 0; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.75rem; }
+  .tab-btn { padding: 9px 22px; border-radius: 8px; border: 1.5px solid #d0d0c8; background: #fff; color: #555; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: #1a3a6e; color: #fff; border-color: #1a3a6e; }
+  .tab-btn:hover:not(.active) { background: #f0f0eb; }
+  .section { display: none; } .section.active { display: block; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1rem 0; }
+  .card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 1rem 1.25rem; }
+  .card-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .card-blue .card-title { color: #1a3a6e; }
+  .card-teal .card-title { color: #085041; }
+  .info-box { background: #eef4ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .success-box { background: #f0f9ec; border-left: 4px solid #4caf50; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 14px; }
+  th { background: #1a3a6e; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #e0e0d8; }
+  tr:nth-child(even) td { background: #f8f8f4; }
+  .arch-chain { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-family: 'SF Mono', monospace; font-size: 13px; margin: 0.75rem 0; }
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: #fff; border-radius: 10px; border: 1px solid #e0e0d8; }
+  .score-track { flex: 1; height: 8px; background: #e5e5e0; border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; background: #3b7a3b; border-radius: 4px; transition: width 0.4s; width: 0%; }
+  .score-val { font-size: 15px; font-weight: 700; min-width: 60px; text-align: right; }
+  .q-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .q-num { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+  .q-text { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; line-height: 1.5; }
+  .option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e0e0d8; margin-bottom: 8px; cursor: pointer; font-size: 14px; line-height: 1.55; transition: background 0.1s; }
+  .option:hover { background: #f5f5f0; }
+  .option .letter { font-weight: 700; min-width: 20px; color: #555; }
+  .option.correct { background: #f0f9ec; border-color: #4caf50; }
+  .option.correct .letter { color: #2e7d32; }
+  .option.wrong { background: #fff0f0; border-color: #ef9999; }
+  .option.wrong .letter { color: #c62828; }
+  .explanation { display: none; margin-top: 10px; padding: 12px 14px; background: #f8f8f4; border-radius: 8px; font-size: 14px; color: #444; line-height: 1.7; border-left: 4px solid #4caf50; }
+  .explanation.show { display: block; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>CSE 322 — Cloud Computing Midterm</h1>
+  <p class="subtitle">Topic 2: Containers & Docker Architecture</p>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('lesson', this)">Lesson</button>
+    <button class="tab-btn" onclick="switchTab('quiz', this)">Quiz (50 Q)</button>
+  </div>
+  <div id="lesson" class="section active">
+    <h2 style="margin-top:0">1 · What is a Container?</h2>
+    <div class="success-box">
+      A <strong>container</strong> is a standard unit of software that packages up <u>code</u> and <u>all its dependencies</u>. As a result, the application runs quickly and reliably in any computing environment.
+    </div>
+    <p>Containers solve the famous developer problem: <em>"it works on my laptop!"</em> — by ensuring the application runs identically in development, staging, and production.</p>
+    <hr>
+    <h2>2 · Docker Container Image</h2>
+    <p>A <strong>Docker container image</strong> is a lightweight, standalone, executable package that includes everything needed to run an application:</p>
+    <ul>
+      <li><strong>Code</strong> — e.g., Python application code</li>
+      <li><strong>Runtime</strong> — e.g., Python interpreter/environment</li>
+      <li><strong>System tools</strong> — OS utilities needed</li>
+      <li><strong>System libraries</strong> — shared libraries</li>
+      <li><strong>Settings</strong> — configuration and environment variables</li>
+    </ul>
+    <div class="info-box"><strong>Image vs Container:</strong> An <em>image</em> is a static blueprint (like a class). A <em>container</em> is a running instance of that image (like an object). Container images become containers at runtime when run on Docker Engine.</div>
+    <hr>
+    <h2>3 · Docker Architecture</h2>
+    <div class="arch-chain">Docker CLI → Docker Engine → containerd → runC → Linux Kernel (namespaces & cgroups)</div>
+    <table>
+      <tr><th>Component</th><th>Role</th></tr>
+      <tr><td><strong>Docker CLI</strong></td><td>Command-line interface for users to interact with Docker. Simple but powerful client.</td></tr>
+      <tr><td><strong>Docker Engine</strong></td><td>Manages API requests and the container lifecycle. The core orchestrator.</td></tr>
+      <tr><td><strong>containerd</strong></td><td>Handles container execution and image management. Available as a daemon for Linux and Windows.</td></tr>
+      <tr><td><strong>BuildKit</strong></td><td>Takes instructions from a Dockerfile and builds a Docker image. Faster and more efficient.</td></tr>
+      <tr><td><strong>runC</strong></td><td>Low-level runtime that directly interacts with the Linux kernel (namespaces & cgroups).</td></tr>
+    </table>
+    <h3>Docker Engine Components</h3>
+    <ul>
+      <li><strong>Containerd</strong> — implements Kubernetes CRI; widely adopted across public clouds</li>
+      <li><strong>BuildKit</strong> — open source tool taking Dockerfile instructions to build images faster and more precisely</li>
+      <li><strong>Docker CLI</strong> — simple yet powerful client for managing container instances</li>
+      <li><strong>Distribution</strong> — manages image pushing/pulling from registries</li>
+      <li><strong>Networking</strong> — manages container network interfaces</li>
+      <li><strong>Volumes</strong> — manages persistent storage for containers</li>
+    </ul>
+    <hr>
+    <h2>4 · Linux Namespaces</h2>
+    <p>Docker uses <strong>Linux namespaces</strong> to provide <strong>isolation</strong> for containers. With namespaces, each container:</p>
+    <ul>
+      <li>Has its own <strong>process tree</strong> — can't see processes in other containers</li>
+      <li>Has its own <strong>IP, interfaces, and routing tables</strong></li>
+      <li>Cannot access another container's <strong>shared memory</strong></li>
+      <li>Has its own <strong>/ filesystem</strong>, separate from the host</li>
+    </ul>
+    <div class="info-box"><strong>Namespaces = "Limits what you can see."</strong> Each container lives in its own isolated bubble — it sees only its own processes, its own network, its own filesystem.</div>
+    <hr>
+    <h2>5 · Control Groups (cgroups)</h2>
+    <p>Docker uses the Linux kernel feature called <strong>cgroups</strong> (Control Groups) to <strong>limit and allocate resources</strong> to containers:</p>
+    <table>
+      <tr><th>Resource</th><th>Docker Flag</th><th>Example</th></tr>
+      <tr><td>CPU Limit</td><td><code>--cpus</code></td><td><code>docker run --cpus="1.5" my_container</code></td></tr>
+      <tr><td>Memory Limit</td><td><code>--memory</code></td><td><code>docker run --memory="512m" my_container</code></td></tr>
+      <tr><td>I/O Limit</td><td><code>--device-read-bps</code></td><td><code>docker run --device-read-bps /dev/sda:10mb ...</code></td></tr>
+    </table>
+    <div class="info-box"><strong>cgroups = "Limits how much you can use."</strong> While namespaces control visibility, cgroups control resource consumption — CPU, memory, disk I/O.</div>
+    <h3>How cgroups Work</h3>
+    <ul>
+      <li><strong>Resource Isolation:</strong> Prevents a container from using excessive system resources</li>
+      <li><strong>Resource Allocation:</strong> Controls how much CPU, memory, or disk I/O a container can use</li>
+      <li><strong>Process Management:</strong> Ensures processes within a container do not exceed assigned limits</li>
+    </ul>
+    <hr>
+    <h2>6 · Containers vs Virtual Machines</h2>
+    <div class="compare-grid">
+      <div class="card card-blue">
+        <div class="card-title">Containers (Docker)</div>
+        <ul>
+          <li>Share the host OS kernel</li>
+          <li>Lightweight — MB in size</li>
+          <li>Start in seconds</li>
+          <li>No separate OS per app</li>
+          <li>Virtualize at the application layer</li>
+        </ul>
+      </div>
+      <div class="card card-teal">
+        <div class="card-title">Virtual Machines (VMs)</div>
+        <ul>
+          <li>Each VM has its own full OS</li>
+          <li>Heavy — GB in size</li>
+          <li>Start in minutes</li>
+          <li>Requires hypervisor (VMware, VirtualBox)</li>
+          <li>Virtualize at the hardware level</li>
+        </ul>
+      </div>
+    </div>
+    <h3>Docker Benefits</h3>
+    <ul>
+      <li><strong>Portable:</strong> Run anywhere — Linux, Windows, cloud, datacenter</li>
+      <li><strong>Lightweight:</strong> Share the host OS kernel; no separate OS per application (reducing server and licensing costs)</li>
+      <li><strong>Secure:</strong> Strongest default isolation capabilities in the industry</li>
+    </ul>
+    <hr>
+    <h2>7 · containerd Daemon</h2>
+    <p><strong>containerd</strong> is available as a daemon for Linux and Windows. It manages the container lifecycle on the host system:</p>
+    <ul>
+      <li>Image transfer and storage</li>
+      <li>Container execution and supervision</li>
+      <li>Low-level storage management</li>
+      <li>Network attachments</li>
+    </ul>
+    <p>containerd implements the Kubernetes Container Runtime Interface (CRI) and is widely adopted across public clouds (AWS, Google Cloud, Azure).</p>
+    <div style="margin-top:1.5rem"><button class="tab-btn" onclick="switchTab('quiz', this)">Go to Quiz →</button></div>
+  </div>
+  <div id="quiz" class="section">
+    <div class="score-row"><span style="font-size:14px;font-weight:600;min-width:55px">Score</span><div class="score-track"><div class="score-fill" id="scorefill"></div></div><span class="score-val" id="scoreval">0 / 50</span></div>
+    <div id="questions"></div>
+  </div>
+</div>
+<script>
+const questions = [
+  { q: "What is a container, according to the Docker definition?", opts: ["A virtual machine with its own OS","A standard unit of software that packages code and all its dependencies","A cloud storage bucket","A type of network switch"], ans: 1, exp: "A container is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably in any computing environment — solving the 'it works on my laptop' problem." },
+  { q: "What does a Docker container image include?", opts: ["Only the application source code","Only the OS and runtime","Code, runtime, system tools, system libraries, and settings","Only the database and configuration"], ans: 2, exp: "A Docker container image includes everything needed to run an application: code (e.g., Python files), runtime (e.g., Python interpreter), system tools, system libraries, and settings/configuration." },
+  { q: "What is the difference between a Docker image and a Docker container?", opts: ["They are the same thing","An image is a static blueprint; a container is a running instance of that image","A container is the blueprint; an image is the running instance","Images run on VMs; containers run on bare metal"], ans: 1, exp: "An image is like a class — a static, read-only blueprint. A container is like an object — a running instance of the image. Container images become containers when run on Docker Engine." },
+  { q: "What is the correct Docker architecture chain?", opts: ["Docker CLI → runC → containerd → Docker Engine → Kernel","Docker CLI → Docker Engine → containerd → runC → Linux Kernel","Linux Kernel → Docker CLI → Engine → containerd","runC → containerd → Docker Engine → Docker CLI → Kernel"], ans: 1, exp: "The correct chain is: Docker CLI → Docker Engine → containerd → runC → Linux Kernel (namespaces & cgroups). Each layer delegates to the next, with runC making the actual Linux kernel calls." },
+  { q: "What is the role of Docker CLI?", opts: ["It manages the Linux kernel directly","It is the command-line interface that allows users to interact with Docker","It builds Docker images from Dockerfiles","It manages container networking"], ans: 1, exp: "Docker CLI is the command-line client that users interact with. It sends commands to the Docker Engine API. It is described as 'a simple yet powerful client that greatly simplifies how you manage container instances.'" },
+  { q: "What does containerd do?", opts: ["Provides the user interface for Docker","Handles container execution and image management; manages the container lifecycle","Builds images from Dockerfiles","Manages cloud storage"], ans: 1, exp: "containerd is a container runtime daemon that handles: image transfer and storage, container execution and supervision, low-level storage, and network attachments. It implements the Kubernetes CRI and runs as a daemon on Linux and Windows." },
+  { q: "What is BuildKit in Docker?", opts: ["A tool for building cloud infrastructure","An open source tool that takes instructions from a Dockerfile and builds a Docker image — faster and more efficiently","A monitoring dashboard for containers","A container orchestration tool"], ans: 1, exp: "BuildKit is an open source tool that reads a Dockerfile and builds Docker images. It is more efficient than the old Docker build system — faster, more precise, and portable. It is part of the Docker Engine." },
+  { q: "What is runC in the Docker architecture?", opts: ["A high-level container management tool","A low-level runtime that directly interacts with the Linux kernel to create containers","A Docker image registry client","A tool for building Docker images"], ans: 1, exp: "runC is the low-level OCI (Open Container Initiative) runtime. It makes direct calls to the Linux kernel's namespaces and cgroups to actually create and run containers. It sits at the bottom of the Docker stack." },
+  { q: "What Linux kernel feature do containers use for isolation?", opts: ["SELinux only","Namespaces and cgroups","AppArmor only","Iptables rules"], ans: 1, exp: "Docker containers use two Linux kernel features: (1) Namespaces — for isolation (limits what a container can see: processes, network, filesystem), and (2) cgroups — for resource limits (CPU, memory, I/O)." },
+  { q: "What do Linux namespaces control in Docker?", opts: ["How much CPU a container can use","What a container can see — its own process tree, network interfaces, filesystem, and memory","How many containers can run simultaneously","Network bandwidth allocation"], ans: 1, exp: "Namespaces control visibility/isolation. Each container gets its own: process tree, IP/interfaces/routing tables, shared memory space, and / filesystem. Namespaces = 'Limits what you can see.'" },
+  { q: "What do cgroups (Control Groups) control in Docker?", opts: ["What processes a container can see","How much resources (CPU, memory, I/O) a container can consume","Container network topology","Container image building"], ans: 1, exp: "cgroups (Control Groups) is a Linux kernel feature that limits and allocates resources to containers. It controls CPU, memory, and disk I/O usage per container. cgroups = 'Limits how much you can use.'" },
+  { q: "Which Docker flag limits the CPU usage of a container?", opts: ["--memory","--cpu-limit","--cpus","--cpu-shares-max"], ans: 2, exp: "The --cpus flag limits CPU usage: e.g., 'docker run --cpus=\"1.5\" my_container' limits the container to using 1.5 CPU cores maximum. This uses the Linux cgroups feature under the hood." },
+  { q: "What command limits a container to 512MB of RAM?", opts: ["docker run --ram=512m my_container","docker run --memory=\"512m\" my_container","docker run --limit-memory 512m my_container","docker run --mem 512mb my_container"], ans: 1, exp: "The correct flag is --memory: 'docker run --memory=\"512m\" my_container'. The 'm' suffix means megabytes. You can also use 'g' for gigabytes. This uses cgroups to enforce the limit at the kernel level." },
+  { q: "How many things does a namespace-isolated container have as 'its own'?", opts: ["Only its own filesystem","Only its own process list","Its own process tree, IP/interfaces/routing, shared memory space, and / filesystem","Only its own network interface"], ans: 2, exp: "With Linux namespaces, each container has its own: (1) process tree, (2) IP, interfaces, and routing tables, (3) shared memory space (cannot access other containers'), (4) / filesystem separate from the host." },
+  { q: "What problem do containers solve for developers?", opts: ["Slow internet connections","The 'it works on my laptop' problem — inconsistent behavior across environments","Database performance issues","Front-end rendering inconsistencies"], ans: 1, exp: "Containers solve the classic problem where an app works in development but breaks in production due to different OS versions, library versions, or configurations. Since the container packages everything, it runs identically everywhere." },
+  { q: "Where does Docker run according to the containerized applications diagram?", opts: ["Above the applications","Between the applications and the Host Operating System","Below the infrastructure","Inside the Linux kernel"], ans: 1, exp: "In the layered diagram: Infrastructure (bottom) → Host Operating System → Docker → Applications (top). Docker sits between the Host OS and the containerized applications, providing the runtime and isolation." },
+  { q: "What does 'Docker is Everywhere' mean?", opts: ["Docker is installed on every computer by default","Docker runs on Linux, Windows, in datacenters, and on cloud platforms — major cloud providers use it for IaaS","Docker is always running even when not in use","Docker containers can run without any OS"], ans: 1, exp: "Docker runs on: Linux (CentOS, Debian, Fedora, RHEL, Ubuntu), Windows Server, on-premise datacenters, and all major cloud platforms (AWS, GCP, Azure). Cloud providers use Docker for container-native IaaS offerings." },
+  { q: "What does 'containerized software will always run the same, regardless of infrastructure' mean?", opts: ["The container uses the same hardware everywhere","Since the container includes all dependencies, the same image produces the same behavior on any machine running Docker Engine","Containers are slower on different hardware","Cloud containers cost the same everywhere"], ans: 1, exp: "Because a Docker image packages the app + all dependencies + runtime + settings, the running behavior is identical whether on a developer's MacBook, a test server, or a production cloud VM. This is Docker's core portability guarantee." },
+  { q: "What does the Docker Engine's 'Distribution' component do?", opts: ["Distributes CPU resources to containers","Manages image pushing to and pulling from container registries","Distributes network traffic between containers","Spreads containers across multiple hosts"], ans: 1, exp: "The Distribution component within Docker Engine manages the transfer of images to/from container registries (like Docker Hub or AWS ECR). It handles image push, pull, and layer management." },
+  { q: "How does a container differ from a VM in terms of OS?", opts: ["Containers have a full OS; VMs share the kernel","VMs have a full OS per VM; containers share the host OS kernel (no separate OS per container)","Both require separate OS installations","Neither requires an OS"], ans: 1, exp: "VMs include a full guest OS (kernel + userspace) for each VM — making them heavy (GBs). Containers share the host OS kernel and only include the application layer — making them lightweight (MBs) and faster to start." },
+  { q: "What is the 'Kubernetes Container Runtime Interface (CRI)' that containerd implements?", opts: ["A Kubernetes plugin for running databases","A standard API for container runtimes to integrate with Kubernetes for scheduling and managing containers","A monitoring interface for Docker","A network plugin standard"], ans: 1, exp: "The Kubernetes CRI is a standard interface (API) that container runtimes must implement to work with Kubernetes. containerd implements CRI, making it directly usable by Kubernetes for running containers across a cluster." },
+  { q: "What is the key advantage of containers being 'lightweight'?", opts: ["They run faster processors","They share the host OS kernel so don't need a separate OS per application — reducing server costs and licensing fees","They use less network bandwidth","They require less developer skill"], ans: 1, exp: "Containers are lightweight because they share the host OS kernel. This means: no separate OS installation per app, less disk space (MBs vs GBs), faster startup (seconds vs minutes), and lower licensing costs (no per-VM OS licenses)." },
+  { q: "Which of the following is NOT a result of Linux namespace isolation?", opts: ["Each container has its own process tree","Containers cannot access other containers' shared memory","Containers have their own IP addresses","Container CPU usage is limited to a fixed percentage"], ans: 3, exp: "CPU usage limiting is done by cgroups, NOT namespaces. Namespaces provide: own process tree, own IP/network, own filesystem, own shared memory space. cgroups limit resource consumption (CPU, memory, I/O)." },
+  { q: "What is the 'Resource Isolation' function of cgroups?", opts: ["Isolating containers from the network","Preventing a container from using excessive system resources that would starve other containers","Isolating container filesystems from each other","Preventing containers from seeing each other's processes"], ans: 1, exp: "Resource Isolation via cgroups prevents a container from monopolizing system resources (CPU, memory, I/O). Without cgroups, one misbehaving container could starve all other containers on the same host." },
+  { q: "What happens when a Docker image is run on Docker Engine?", opts: ["It creates a new Dockerfile","It becomes a container — a running instance of that image","It is pushed to Docker Hub","It compiles the source code"], ans: 1, exp: "When you run 'docker run <image>', the image (static blueprint) becomes a container (running instance). Docker Engine uses containerd → runC → Linux kernel (namespaces + cgroups) to start the container process." },
+  { q: "Which cloud providers use Docker/containerd for their container services?", opts: ["Only AWS","Only Google Cloud","AWS, Google Cloud Platform, Microsoft Azure, Alibaba Cloud, and others","Only on-premise datacenters"], ans: 2, exp: "All major cloud providers leverage Docker/containerd: AWS (ECS, EKS), Google Cloud (GKE), Microsoft Azure (AKS), Alibaba Cloud, IBM Cloud, Rancher, and others — for container-native IaaS offerings." },
+  { q: "What is 'Process Management' as a cgroups function?", opts: ["Managing the process scheduler priority","Ensuring processes within a container do not exceed their assigned resource limits","Managing which processes are visible to a container","Starting and stopping container processes"], ans: 1, exp: "cgroups Process Management ensures that all processes running inside a container collectively do not exceed the resource limits assigned to that container. If a process tries to exceed limits, the kernel enforces the constraint." },
+  { q: "Which Docker Engine component is responsible for orchestration?", opts: ["BuildKit","Containerd","The Orchestration component within Docker Engine","Docker CLI"], ans: 2, exp: "Docker Engine includes an Orchestration component that manages how containers are scheduled, started, stopped, and scaled. For more complex orchestration at scale, tools like Kubernetes (which uses containerd directly) are used." },
+  { q: "What is the primary security benefit of container isolation?", opts: ["Containers encrypt all network traffic automatically","Applications are safer in containers because Docker provides strong default isolation — if one container is compromised, others are protected","Containers prevent all malware by design","Container images are always virus-scanned"], ans: 1, exp: "Docker provides strong default isolation through namespaces (visibility) and cgroups (resources). If one container is compromised, the attacker is isolated within that container's namespace and cannot easily access other containers or the host." },
+  { q: "From development to staging to production — what guarantee does Docker provide?", opts: ["The code will have no bugs","The containerized application will work uniformly because the environment is identical in all stages","The application will be faster in production","The database schema will be migrated automatically"], ans: 1, exp: "Docker guarantees that containerized software works uniformly from development to staging to production. Since the container includes all dependencies, the same image is used at every stage — eliminating environment-related bugs." },
+  { q: "What is the I/O limit flag in Docker cgroups?", opts: ["--io-limit","--disk-read","--device-read-bps","--storage-limit"], ans: 2, exp: "The --device-read-bps flag limits disk I/O read speed: e.g., 'docker run --device-read-bps /dev/sda:10mb my_container' limits reads to 10MB/s. Similarly, --device-write-bps limits write speed. These use cgroups under the hood." },
+  { q: "Why does Docker Engine use containerd instead of making direct kernel calls?", opts: ["For security reasons only","Containerd provides a stable, CRI-compatible abstraction layer between Docker Engine and low-level runtimes (runC), enabling integration with Kubernetes and other orchestrators","Docker Engine cannot access the kernel directly","runC is too slow for production use"], ans: 1, exp: "containerd provides a stable daemon API between Docker Engine and runC. This abstraction: (1) enables Kubernetes integration via CRI, (2) provides stable image management, (3) manages the full container lifecycle beyond just start/stop." },
+  { q: "What does 'docker run --memory=\"500m\" --cpus=\"1.5\" ubuntu' do?", opts: ["Starts Ubuntu with 500 CPUs and 1.5GB RAM","Starts an Ubuntu container limited to 500MB RAM and 1.5 CPU cores maximum using cgroups","Downloads Ubuntu 1.5 with 500MB image size","Creates an Ubuntu VM with 500MB storage"], ans: 1, exp: "This command starts an Ubuntu container with: --memory=\"500m\" = maximum 500 megabytes RAM (enforced by cgroups), --cpus=\"1.5\" = maximum 1.5 CPU cores (enforced by cgroups). These are resource limits, not reservations." },
+  { q: "What component within containerd handles 'snapshotter' functionality?", opts: ["BuildKit","The snapshotter in the containerd backend, which supports overlay, btrfs, native, windows, and other storage drivers","Docker CLI","The Docker networking plugin"], ans: 1, exp: "containerd's backend includes a Snapshotter component that manages filesystem layers (snapshots) for container images. It supports multiple drivers: overlay (most common on Linux), btrfs, devmapper, native, windows, and plugin-based drivers." },
+  { q: "What is the 'Container Runtime' in Docker?", opts: ["Docker Desktop GUI","Docker Engine — a container runtime that runs on various Linux and Windows Server OSes and bundles all dependencies inside containers","A type of Linux kernel module","A Python package for managing containers"], ans: 1, exp: "Docker Engine is the container runtime. It: runs on Linux (CentOS, Debian, Fedora, RHEL, Ubuntu) and Windows Server, bundles all application dependencies inside containers, and enables containerized apps to run anywhere." },
+  { q: "What is the namespace type responsible for filesystem isolation in containers?", opts: ["PID namespace","Network namespace","Mount namespace (providing own / filesystem separate from host)","UTS namespace"], ans: 2, exp: "The Mount namespace provides each container with its own filesystem view (/ root). It is separate from the host filesystem and other containers. This is how containers have their own files without interfering with the host." },
+  { q: "Which of the following is NOT part of Docker Engine?", opts: ["BuildKit","containerd","Networking","The Linux kernel"], ans: 3, exp: "The Linux kernel is NOT part of Docker Engine — it's the underlying OS component that Docker uses. Docker Engine components include: Distribution, Orchestration, Volumes, containerd, Docker Build (BuildKit), and Networking." },
+  { q: "What is the PID namespace in Docker containers?", opts: ["A unique identifier for images","The namespace that gives each container its own process tree — processes in one container cannot see processes in another","A network process identifier","A port allocation namespace"], ans: 1, exp: "The PID (Process ID) namespace gives each container an isolated process tree. Inside the container, processes start with PID 1. Processes in different containers are invisible to each other — they have separate PID namespaces." },
+  { q: "What is the network namespace in Docker containers?", opts: ["A shared IP address pool","Each container gets its own virtual network interfaces, IP address, and routing tables — isolated from other containers","A namespace for DNS resolution only","A shared network namespace for all containers"], ans: 1, exp: "The network namespace gives each container its own: virtual network interface(s), IP address, routing tables, and firewall rules. By default, containers are isolated and communicate via Docker's virtual network bridge." },
+  { q: "A container is running as root inside Docker. What is the security implication?", opts: ["No security risk — containers are always isolated","Running as root inside the container means the process has root privileges on the Docker host — a security risk","Root inside a container has limited privileges","This only matters for containers accessing databases"], ans: 1, exp: "By default, Docker runs container processes as root. A process running as root inside the container is effectively running as root on the Docker host. If an attacker compromises the container, they can potentially access the host with full root privileges." },
+  { q: "What does the UTS namespace do in Docker?", opts: ["Manages user accounts","Allows each container to have its own hostname and domain name, isolated from the host and other containers","Manages UTC timezone settings","Provides unique container IDs"], ans: 1, exp: "The UTS (Unix Time-sharing System) namespace allows each container to have its own hostname and NIS domain name. This is why each container appears to have its own hostname different from the host machine." },
+  { q: "How does Docker achieve the 'runs anywhere' portability?", opts: ["By using the same hardware everywhere","By bundling all application dependencies (code, runtime, libraries, config) into the image, so the same image runs identically on any Docker Engine regardless of underlying infrastructure","By compiling code for each target platform separately","By using a universal bytecode format"], ans: 1, exp: "Docker achieves portability by packaging everything the app needs into the image. The Docker Engine provides the consistent runtime layer. So the same image runs on: developer Mac, CI server, AWS, Azure, GCP — identically." },
+  { q: "What is 'Resource Allocation' in the context of cgroups?", opts: ["Allocating IP addresses to containers","Controlling exactly how much CPU, memory, or disk I/O each container can use — enforced by the Linux kernel","Allocating Docker images to containers","Distributing containers across multiple host machines"], ans: 1, exp: "cgroups Resource Allocation lets you define resource budgets per container: how much CPU it can use, how much RAM it can consume, how much disk I/O throughput it gets. The kernel enforces these limits at runtime." },
+  { q: "What is the main advantage of containerd implementing Kubernetes CRI?", opts: ["It makes containers run faster","It allows Kubernetes to use containerd directly to manage containers across a cluster, without needing Docker Engine as an intermediary","It provides a GUI for Kubernetes","It enables Windows containers only"], ans: 1, exp: "By implementing the Kubernetes CRI (Container Runtime Interface), containerd can be used directly by Kubernetes (via kubelet) to run containers. This means Kubernetes can manage containers using containerd without needing Docker Engine — widely adopted across AWS EKS, GKE, AKS." },
+  { q: "Which statement correctly describes the lightweight nature of Docker containers vs VMs?", opts: ["VMs are lighter because they use hardware virtualization","Containers share the host OS kernel so don't need a full guest OS — they start in seconds and are MBs in size vs VM GBs that take minutes to start","Containers are heavier but more secure","VMs start in seconds; containers take minutes"], ans: 1, exp: "Containers: share host OS kernel, start in seconds, are MBs in size (no OS overhead). VMs: each has its own full OS (kernel + userspace), start in minutes, are GBs in size. This makes containers much more efficient for running many isolated services." },
+  { q: "What happens at the kernel level when Docker creates a container?", opts: ["Docker installs a new kernel for each container","Docker uses runC to call Linux kernel APIs for namespaces (isolation) and cgroups (resource limits) to create an isolated process environment","Docker copies the entire OS for each container","Docker uses a hypervisor to create a virtual machine"], ans: 1, exp: "When creating a container, runC calls Linux kernel APIs to: (1) create namespaces — new PID, network, mount, UTS, IPC namespaces for isolation; (2) set up cgroups — resource limits; (3) start the container process in this isolated environment." },
+  { q: "What is the 'IPC namespace' in Docker?", opts: ["Internet Protocol Control namespace","Inter-Process Communication namespace — prevents containers from accessing each other's shared memory segments","Image Pull Cache namespace","Internal Port Control namespace"], ans: 1, exp: "The IPC (Inter-Process Communication) namespace isolates shared memory, semaphores, and message queues. Each container cannot access another container's IPC resources. This is what the slide means by 'cannot access another container's shared memory.'" },
+  { q: "Why is Docker described as having 'the strongest default isolation capabilities in the industry'?", opts: ["Because Docker uses military-grade encryption","Because Docker uses multiple Linux namespace types plus cgroups by default, providing multi-layered isolation without additional configuration","Because Docker VMs are more isolated than regular VMs","Because Docker uses the most secure programming language"], ans: 1, exp: "Docker uses multiple Linux security features by default: PID, network, mount, UTS, IPC namespaces (visibility isolation) + cgroups (resource isolation) + capabilities restrictions + seccomp profiles. This multi-layer approach gives strong default isolation." },
+  { q: "What does the Docker Networking component within Docker Engine manage?", opts: ["The internet connection for the host machine","Container-to-container communication, bridge networks, port mapping, and virtual network interfaces","Cloud load balancer configuration","SSH access to containers"], ans: 1, exp: "Docker's Networking component manages: virtual network bridges (docker0), container IP assignment, port mapping between host and container, container-to-container communication, DNS resolution between containers, and overlay networks for multi-host setups." },
+  { q: "What does the Docker Volumes component within Docker Engine manage?", opts: ["Image version management","Persistent storage for containers — managing named volumes, bind mounts, and storage driver integration","Memory allocation for containers","Container log file management"], ans: 1, exp: "Docker Volumes component manages persistent storage. Since containers are ephemeral (data is lost when container is removed), volumes provide persistent storage that survives container restarts and removals. It manages named volumes and storage driver integration." },
+  { q: "Which statement best describes how Docker eliminates 'dependency hell'?", opts: ["By using virtual environments like Python venv","By packaging all application dependencies inside the container image — each app has its own isolated environment so conflicting versions don't interfere","By requiring all apps to use the same dependency versions","By using a global package manager for all containers"], ans: 1, exp: "Docker eliminates dependency hell because each container is fully isolated with its own dependencies. App A can use Python 3.8 while App B uses Python 3.12 — both on the same host, no conflicts, because each is in its own isolated container." }
+];
+const N = 50;
+let answered = Array(N).fill(false);
+let score = 0;
+function buildQuiz() {
+  const container = document.getElementById('questions');
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    let html = '<div class="q-num">Question ' + (qi+1) + ' of ' + N + '</div><div class="q-text">' + q.q + '</div>';
+    q.opts.forEach((o, oi) => { html += '<div class="option" id="opt-' + qi + '-' + oi + '" onclick="answer(' + qi + ',' + oi + ')"><span class="letter">' + 'ABCD'[oi] + '.</span><span>' + o + '</span></div>'; });
+    html += '<div class="explanation" id="exp-' + qi + '"><strong>Explanation:</strong> ' + q.exp + '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+}
+function answer(qi, oi) {
+  if (answered[qi]) return;
+  answered[qi] = true;
+  const correct = questions[qi].ans;
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('opt-' + qi + '-' + i);
+    if (i === correct) el.classList.add('correct');
+    else if (i === oi) el.classList.add('wrong');
+    el.style.pointerEvents = 'none';
+  });
+  document.getElementById('exp-' + qi).classList.add('show');
+  if (oi === correct) score++;
+  document.getElementById('scorefill').style.width = (score/N*100) + '%';
+  document.getElementById('scoreval').textContent = score + ' / ' + N;
+}
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+buildQuiz();
+</script>
+</body>
+</html>

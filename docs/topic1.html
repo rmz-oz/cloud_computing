@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE 322 — Topic 1: Introduction to Cloud Computing</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 1.75rem 0 0.75rem; color: #1a1a1a; }
+  h3 { font-size: 15px; font-weight: 600; margin: 1.2rem 0 0.5rem; }
+  p { font-size: 15px; line-height: 1.75; margin-bottom: 0.65rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+  li { font-size: 14px; line-height: 1.8; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #e8e8e4; padding: 2px 6px; border-radius: 4px; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 13px; overflow-x: auto; margin: 0.75rem 0; font-family: 'SF Mono', monospace; line-height: 1.6; }
+  hr { border: none; border-top: 1px solid #e0e0d8; margin: 1.75rem 0; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.75rem; }
+  .tab-btn { padding: 9px 22px; border-radius: 8px; border: 1.5px solid #d0d0c8; background: #fff; color: #555; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: #1a3a6e; color: #fff; border-color: #1a3a6e; }
+  .tab-btn:hover:not(.active) { background: #f0f0eb; }
+  .section { display: none; } .section.active { display: block; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1rem 0; }
+  .card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 1rem 1.25rem; }
+  .card-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .card-blue .card-title { color: #1a3a6e; }
+  .card-teal .card-title { color: #085041; }
+  .card-red .card-title { color: #b91c1c; }
+  .info-box { background: #eef4ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .success-box { background: #f0f9ec; border-left: 4px solid #4caf50; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 14px; }
+  th { background: #1a3a6e; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #e0e0d8; }
+  tr:nth-child(even) td { background: #f8f8f4; }
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: #fff; border-radius: 10px; border: 1px solid #e0e0d8; }
+  .score-track { flex: 1; height: 8px; background: #e5e5e0; border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; background: #3b7a3b; border-radius: 4px; transition: width 0.4s; width: 0%; }
+  .score-val { font-size: 15px; font-weight: 700; min-width: 60px; text-align: right; }
+  .q-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .q-num { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+  .q-text { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; line-height: 1.5; }
+  .option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e0e0d8; margin-bottom: 8px; cursor: pointer; font-size: 14px; line-height: 1.55; transition: background 0.1s; }
+  .option:hover { background: #f5f5f0; }
+  .option .letter { font-weight: 700; min-width: 20px; color: #555; }
+  .option.correct { background: #f0f9ec; border-color: #4caf50; }
+  .option.correct .letter { color: #2e7d32; }
+  .option.wrong { background: #fff0f0; border-color: #ef9999; }
+  .option.wrong .letter { color: #c62828; }
+  .explanation { display: none; margin-top: 10px; padding: 12px 14px; background: #f8f8f4; border-radius: 8px; font-size: 14px; color: #444; line-height: 1.7; border-left: 4px solid #4caf50; }
+  .explanation.show { display: block; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>CSE 322 — Cloud Computing Midterm</h1>
+  <p class="subtitle">Topic 1: Introduction to Cloud Computing</p>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('lesson', this)">Lesson</button>
+    <button class="tab-btn" onclick="switchTab('quiz', this)">Quiz (50 Q)</button>
+  </div>
+  <div id="lesson" class="section active">
+    <h2 style="margin-top:0">1 · Service Availability & The Nines</h2>
+    <p>A key metric for cloud services is <strong>uptime</strong> — expressed as a percentage of the year the service is available. Higher availability means less downtime.</p>
+    <table>
+      <tr><th>Availability</th><th>Nines</th><th>Annual Downtime</th><th>Monthly Downtime</th></tr>
+      <tr><td>90%</td><td>1 nine</td><td>36.5 days</td><td>72 hours</td></tr>
+      <tr><td>99%</td><td>2 nines</td><td>3.65 days</td><td>7.20 hours</td></tr>
+      <tr><td>99.9%</td><td>3 nines</td><td>8.76 hours</td><td>43.2 minutes</td></tr>
+      <tr><td>99.99%</td><td>4 nines</td><td>52.56 minutes</td><td>4.32 minutes</td></tr>
+      <tr><td><strong>99.999%</strong></td><td><strong>5 nines</strong></td><td><strong>5.26 minutes</strong></td><td>25.9 seconds</td></tr>
+    </table>
+    <div class="info-box"><strong>Goal:</strong> Internet services aim for 99.999% availability ("five nines") — only 5.26 minutes of downtime per year. Automating routine operations is key to achieving this.</div>
+    <hr>
+    <h2>2 · Famous Outages</h2>
+    <p>Major outages show the real cost of downtime — both financial and reputational:</p>
+    <table>
+      <tr><th>Company</th><th>When</th><th>Cause</th><th>Impact</th></tr>
+      <tr><td>AOL</td><td>Aug 1996, 19 hrs</td><td>Local network router bug</td><td>Refunds to 6.3M users</td></tr>
+      <tr><td>EBay</td><td>Jun 1998, 1 day</td><td>Critical bug in listing software</td><td>$3-5M, user discounts</td></tr>
+      <tr><td>MSN</td><td>Jul 2001, 1 week</td><td>Disk controller failure</td><td>Users fled to competitors</td></tr>
+      <tr><td>Netflix</td><td>Jul 2007, 18 hrs</td><td>Unexplained</td><td>Stock hit rock bottom</td></tr>
+      <tr><td>Skype</td><td>Aug 2007, 2 days</td><td>Routing algorithm flaw</td><td>Reputation damaged</td></tr>
+      <tr><td>XBOX</td><td>Holiday 07-08, 13 days</td><td>Traffic overload</td><td>Microsoft gave free games</td></tr>
+    </table>
+    <div class="warn-box"><strong>Key lesson:</strong> Annual downtime cost can reach millions of dollars. Brand damage is even greater. Hardware, software, and human error are the main causes.</div>
+    <hr>
+    <h2>3 · Traditional Hardware Purchase Model</h2>
+    <p>In the traditional model, companies buy servers based on <em>predicted future demand</em>. This leads to two persistent problems:</p>
+    <div class="compare-grid">
+      <div class="card card-blue">
+        <div class="card-title">Over-provisioning</div>
+        <ul>
+          <li>Buy large hardware upfront</li>
+          <li>At normal times only 15-20% of capacity is used</li>
+          <li>Resources are wasted and expensive</li>
+          <li>"Buy a large size, then eat to fill it"</li>
+        </ul>
+      </div>
+      <div class="card card-red">
+        <div class="card-title">Under-provisioning</div>
+        <ul>
+          <li>Demand spikes exceed capacity</li>
+          <li>Unhappy customers during peak traffic</li>
+          <li>Opportunity cost — lost sales</li>
+          <li>Hardware takes weeks to procure</li>
+        </ul>
+      </div>
+    </div>
+    <div class="warn-box"><strong>The problem:</strong> Servers are bought based on future demand forecasts, not real-time demand. During peak periods (e.g., holiday season), existing hardware is insufficient. During off-peak, 85% sits idle.</div>
+    <hr>
+    <h2>4 · Operation Dynamics</h2>
+    <p>Web traffic is highly variable and depends on:</p>
+    <ul>
+      <li>Time of day (peak vs. off-peak hours)</li>
+      <li>Season (holiday shopping spikes)</li>
+      <li>Marketing & promotional campaigns</li>
+      <li>Viral popularity or news events</li>
+      <li>Instant customer demand surges</li>
+    </ul>
+    <p>Because demand is unpredictable, over-provisioning is unavoidable in the traditional model. The <strong>ideal solution</strong>: provision infrastructure that matches real demand dynamically — scale up when needed, scale down when not.</p>
+    <hr>
+    <h2>5 · Cloud Computing Solution</h2>
+    <div class="success-box">
+      <strong>Cloud Computing</strong> provides on-demand access to computing resources (servers, storage, networking) over the internet, billed only for what you use. This eliminates over-provisioning and enables instant scaling.
+    </div>
+    <h3>Service Models</h3>
+    <div class="compare-grid" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="card card-blue"><div class="card-title">IaaS</div><p style="font-size:13px">Infrastructure as a Service. Raw VMs, storage, networking. You manage OS and up. (AWS EC2, Azure VMs)</p></div>
+      <div class="card card-teal"><div class="card-title">PaaS</div><p style="font-size:13px">Platform as a Service. Managed runtime + middleware. You deploy code only. (Heroku, AWS Elastic Beanstalk)</p></div>
+      <div class="card card-red"><div class="card-title">SaaS</div><p style="font-size:13px">Software as a Service. Fully managed apps. You just use them. (Gmail, Salesforce, Dropbox)</p></div>
+    </div>
+    <h3>Key Cloud Benefits</h3>
+    <ul>
+      <li><strong>Elasticity:</strong> Scale up or down automatically based on demand</li>
+      <li><strong>Pay-as-you-go:</strong> Pay only for resources consumed</li>
+      <li><strong>No upfront capital:</strong> No hardware purchase needed</li>
+      <li><strong>High availability:</strong> Providers guarantee SLA uptime (e.g., 99.99%)</li>
+      <li><strong>Global reach:</strong> Deploy in data centers worldwide instantly</li>
+    </ul>
+    <h3>Operations Unit Responsibilities</h3>
+    <ul>
+      <li>Keep Dev, Test, and Production environments technically adequate</li>
+      <li>Share software and hardware resources across multiple projects efficiently</li>
+      <li>Maintain architectural standards compliance</li>
+      <li>Coordinate across technical operation units</li>
+      <li>Facilitate smooth transitions to new technologies</li>
+      <li>Meet end-user expectations through technical support</li>
+    </ul>
+    <div style="margin-top:1.5rem"><button class="tab-btn" onclick="switchTab('quiz', this)">Go to Quiz →</button></div>
+  </div>
+  <div id="quiz" class="section">
+    <div class="score-row"><span style="font-size:14px;font-weight:600;min-width:55px">Score</span><div class="score-track"><div class="score-fill" id="scorefill"></div></div><span class="score-val" id="scoreval">0 / 50</span></div>
+    <div id="questions"></div>
+  </div>
+</div>
+<script>
+const questions = [
+  { q: "What does 99.999% service availability translate to in annual downtime?", opts: ["52.56 minutes per year","5.26 minutes per year","8.76 hours per year","25.9 seconds per year"], ans: 1, exp: "99.999% (five nines) means only 5.26 minutes of downtime per year. This is the gold standard for internet services. Each additional nine dramatically reduces allowable downtime." },
+  { q: "What is the annual downtime for a service with 99% (two nines) availability?", opts: ["36.5 days","8.76 hours","3.65 days","52.56 minutes"], ans: 2, exp: "99% availability (2 nines) allows 3.65 days of downtime per year (about 7.20 hours per month). Compare to 99.999% which allows only 5.26 minutes annually." },
+  { q: "Which availability level allows up to 43.2 minutes of downtime per month?", opts: ["99% (2 nines)","99.9% (3 nines)","99.99% (4 nines)","99.999% (5 nines)"], ans: 1, exp: "99.9% (3 nines) allows 8.76 hours per year / 43.2 minutes per month. This is a common SLA level for many business services." },
+  { q: "What is the primary cause of major internet service outages historically?", opts: ["Natural disasters","Hardware, software, and human error","Cyber attacks only","Network congestion only"], ans: 1, exp: "Major recorded outages have been caused by a combination of hardware failure, software bugs, and human error. All three contribute significantly to service disruptions." },
+  { q: "In the AOL outage of August 1996, what was the stated cause?", opts: ["Software bug in their email system","A bug in the local high-capacity network router","Database corruption","Traffic overload"], ans: 1, exp: "The AOL August 1996 outage (19 hours) was caused by a bug in the local high-capacity network router. AOL had to refund 6.3 million users." },
+  { q: "How long did the Xbox outage during the 2007-2008 holiday season last?", opts: ["19 hours","2 days","1 week","13 days"], ans: 3, exp: "The Xbox outage during the 2007-2008 holiday season lasted 13 days due to traffic overload. Microsoft responded by giving free games to affected users." },
+  { q: "What was Microsoft's response to the Xbox outage during holiday 2007-2008?", opts: ["They issued a formal apology only","They gave free games to users","They refunded subscription fees","They upgraded all hardware"], ans: 1, exp: "Microsoft gave free games to affected Xbox users as compensation for the 13-day holiday season outage caused by traffic overload." },
+  { q: "What does the 'traditional hardware purchase model' problem refer to?", opts: ["Buying servers that are too fast","Buying servers based on predicted future demand rather than real-time demand","Using cloud instead of on-premise","Renting hardware instead of buying"], ans: 1, exp: "In the traditional model, servers are always bought based on future demand forecasts. At any given off-peak moment, only about 15-20% of computing capacity is actually used — the rest sits idle." },
+  { q: "On average, what percentage of computing capacity is actually used at any non-peak time in traditional data centers?", opts: ["50-60%","80-90%","15-20%","40-50%"], ans: 2, exp: "Studies show that at any given non-peak time, approximately 15-20% of computing and processing capacity is actually used in traditional infrastructure. This massive waste is a key driver toward cloud adoption." },
+  { q: "What is the term for the analogy 'buy a large size then eat to fill it' in traditional infrastructure?", opts: ["Elastic scaling","Over-provisioning","Just-in-time provisioning","Vertical scaling"], ans: 1, exp: "Over-provisioning describes buying more hardware than currently needed based on predicted peak demand. The analogy used is 'buy a large size then eat to fill it' — you pay for capacity you don't yet use." },
+  { q: "What is 'opportunity cost' in the context of the traditional hardware model?", opts: ["The cost of buying new hardware","The cost of cloud migration","The revenue lost when infrastructure is insufficient to meet demand","The cost of hiring more engineers"], ans: 2, exp: "Opportunity cost in this context means the revenue/business lost when actual demand exceeds available infrastructure capacity — customers get a bad experience and may leave, causing lost sales." },
+  { q: "Why is web traffic considered variable or dynamic?", opts: ["Servers process requests at varying speeds","Traffic varies by time of day, season, campaigns, popularity, and instant demand surges","Network bandwidth fluctuates randomly","DNS resolution takes varying time"], ans: 1, exp: "Web traffic varies based on: (i) time of day, (ii) season, (iii) marketing/promotional campaigns, (iv) viral popularity, (v) instant customer demand surges. This variability makes static hardware provisioning very difficult." },
+  { q: "What is the 'ideal' infrastructure model in contrast to the traditional model?", opts: ["Buy the maximum possible hardware","Provision infrastructure that matches real demand dynamically — scale up/down as needed","Always maintain 50% spare capacity","Use only bare metal servers"], ans: 1, exp: "The ideal model provisions infrastructure dynamically to match actual real-time demand — scaling up during peak traffic and scaling down (or releasing resources) during low demand, eliminating both over and under-provisioning." },
+  { q: "What is IaaS in cloud computing?", opts: ["Internet as a Service","Infrastructure as a Service — raw VMs, storage, networking managed by provider","Integrated Application Service","Internal Architecture as a System"], ans: 1, exp: "IaaS (Infrastructure as a Service) provides raw computing resources — virtual machines, storage, networking. The user manages the OS and above, while the provider manages the physical hardware. Examples: AWS EC2, Azure Virtual Machines." },
+  { q: "Which cloud service model manages the runtime and middleware, letting you deploy only your code?", opts: ["IaaS","SaaS","PaaS","DaaS"], ans: 2, exp: "PaaS (Platform as a Service) manages the runtime environment, middleware, and infrastructure. Developers deploy their application code without worrying about servers. Examples: Heroku, AWS Elastic Beanstalk, Google App Engine." },
+  { q: "Gmail and Salesforce are examples of which cloud service model?", opts: ["IaaS","PaaS","SaaS","NaaS"], ans: 2, exp: "SaaS (Software as a Service) delivers fully managed applications over the internet. Users simply use the software without managing any infrastructure, platform, or runtime. Examples: Gmail, Salesforce, Dropbox, Microsoft 365." },
+  { q: "What does 'elasticity' mean in cloud computing?", opts: ["The ability to stretch server hardware","Automatic scaling of resources up or down based on demand","The flexibility to choose any programming language","The ability to migrate between cloud providers"], ans: 1, exp: "Elasticity is the ability to automatically scale computing resources up when demand increases and scale down (release resources) when demand decreases. This is a core cloud advantage over traditional hardware models." },
+  { q: "What is the pay-as-you-go cloud billing model?", opts: ["Pay a fixed monthly fee regardless of usage","Pay upfront for a full year of service","Pay only for the resources you actually consume","Pay based on number of users"], ans: 2, exp: "Pay-as-you-go means you are billed only for what you actually use — compute hours, storage bytes, data transferred — rather than a fixed fee. This eliminates upfront capital expenditure and wasted idle capacity." },
+  { q: "What is a Service Level Agreement (SLA) in cloud computing?", opts: ["A software license agreement","A contract between provider and customer guaranteeing minimum service uptime and performance","An agreement about data storage pricing","A technical specification for server hardware"], ans: 1, exp: "An SLA is a contract where the cloud provider guarantees minimum uptime (e.g., 99.99%), performance, and response times. If the provider fails to meet the SLA, customers typically receive service credits." },
+  { q: "What was the Netflix outage of July 2007 about?", opts: ["A major software bug","Database corruption","An unexplained 18-hour outage","Traffic overload"], ans: 2, exp: "The Netflix outage in July 2007 lasted 18 hours with an unexplained and unannounced cause. The impact was severe — Netflix stock hit rock bottom within 2 years following the incident." },
+  { q: "The Skype outage of August 2007 was caused by what?", opts: ["Server hardware failure","Database full","A flaw in the network routing algorithm","Traffic overload from a promotion"], ans: 2, exp: "The Skype outage in August 2007 (2 days) was caused by a handicap/flaw in the network routing algorithm. This damaged Skype's image as a reliable alternative to traditional phone lines." },
+  { q: "What is the operations unit's responsibility regarding architectural standards?", opts: ["Defining new programming languages","Maintaining continuous compliance with architectural standards","Writing application code","Managing customer relationships"], ans: 1, exp: "One of the operations unit's key responsibilities is maintaining architectural standards compliance — ensuring that all systems consistently meet established architectural requirements and best practices." },
+  { q: "Which of the following is a consequence of under-provisioning in the traditional model?", opts: ["Wasted hardware costs","Unhappy customers during demand spikes and lost opportunity","Lower electricity bills","Better security"], ans: 1, exp: "Under-provisioning occurs when actual demand exceeds capacity. The consequences are: unhappy customers (poor experience), lost sales (opportunity cost), and potential permanent customer loss to competitors." },
+  { q: "In the traditional model, why can't companies simply buy hardware when needed?", opts: ["Hardware is too expensive","It takes weeks or months to procure, configure, and deploy new hardware","Cloud regulations prevent it","Hardware vendors don't support on-demand purchasing"], ans: 1, exp: "Traditional hardware procurement, configuration, and deployment takes weeks to months. By the time new hardware arrives, the demand spike may have passed — making just-in-time hardware purchasing impractical." },
+  { q: "What is the goal for internet services in terms of availability?", opts: ["99% uptime with planned maintenance windows","7 days 24 hours 'flawless operation' (99.999%)","50% uptime with rapid recovery","Monthly maintenance windows are acceptable"], ans: 1, exp: "The stated goal for internet services is to reach the ideal of 99.999% availability — providing service '7 days 24 hours' with 'flawless operation.' Automating routine tasks is key to achieving this standard." },
+  { q: "How does cloud computing solve the traditional hardware model problem?", opts: ["By buying more hardware in advance","By providing on-demand, scalable resources billed per use — eliminating over-provisioning","By requiring annual contracts","By eliminating the need for servers entirely"], ans: 1, exp: "Cloud computing eliminates the traditional model problem by providing: (1) on-demand resources — scale instantly, (2) pay-per-use — no idle capacity cost, (3) elasticity — match real demand, not predictions." },
+  { q: "What was the EBay outage of June 1998 caused by?", opts: ["Network router failure","A critical bug in the auction listing software","Database server crash","Traffic overload during sale"], ans: 1, exp: "The EBay outage in June 1998 lasted 1 day and was caused by a critical bug in the listing software. The financial impact was $3-5 million, and affected users received discounts and refunds." },
+  { q: "What does the phrase 'automating routine operations' help achieve in cloud services?", opts: ["Reducing the need for any human engineers","Approaching the 99.999% availability goal by reducing human error and enabling faster response","Increasing hardware costs","Limiting scalability"], ans: 1, exp: "Automating routine operations (deployments, scaling, failover, monitoring) helps achieve 99.999% availability by: (1) eliminating human error, (2) enabling 24/7 automated response, (3) reducing reaction time from hours to seconds." },
+  { q: "What does 'global reach' mean as a cloud computing benefit?", opts: ["Using satellites for internet connectivity","Deploying applications in data centers worldwide instantly without buying hardware in each location","Translating apps into multiple languages","Serving users faster via CDN only"], ans: 1, exp: "Global reach means you can deploy your application in cloud data centers in multiple geographic regions worldwide (e.g., US, EU, Asia) instantly, without the cost and complexity of building or leasing physical data centers in each location." },
+  { q: "What is the 'MobileMe' outage example about?", opts: ["Apple's mail servers crashed due to traffic overload","Apple's email servers experienced a flaw due to traffic congestion, costing the MobileMe manager their job","Apple's App Store was offline","Apple's iCloud storage failed"], ans: 1, exp: "The MobileMe outage (July 2008) was caused by traffic congestion-related failures in Apple's email servers. The consequence was so severe that the MobileMe manager lost their job." },
+  { q: "What is the difference between uptime and availability?", opts: ["They are completely different metrics","Availability = uptime percentage over a period; uptime = the actual time the system was operational. They express the same concept differently.","Uptime measures speed, availability measures reliability","Availability only applies to networks"], ans: 1, exp: "Uptime is the total time a system was operational. Availability is typically expressed as a percentage (uptime/total time × 100). A system with 99.999% availability has 5.26 minutes downtime per year. Both concepts measure service reliability." },
+  { q: "Which of the following best describes 'no upfront capital' as a cloud benefit?", opts: ["You never pay for cloud services","You don't need to purchase physical hardware before using computing resources","Cloud providers lend money to customers","Government subsidizes cloud costs"], ans: 1, exp: "In traditional IT, companies must buy expensive servers before they can use them (upfront capital expenditure/CapEx). Cloud converts this to operational expenditure (OpEx) — pay as you go with no upfront hardware purchase required." },
+  { q: "What was the common factor in causing the famous outages listed (AOL, EBay, Skype, etc.)?", opts: ["All were caused by cyber attacks","All involved hardware, software, or human error in some combination","All were caused by cloud migration failures","All occurred during high marketing campaigns"], ans: 1, exp: "The famous outages (AOL, EBay, MSN, Netflix, Skype, Xbox) were all caused by some combination of hardware failure, software bugs, and human error. These are the three primary causes of internet service disruptions." },
+  { q: "What does the MSN outage of July 2001 illustrate?", opts: ["The danger of SaaS services","How a disk controller failure lasting 1 week caused users to permanently switch to competitors like AIM and Yahoo","The risk of overprovisioning","Network routing failures"], ans: 1, exp: "The MSN outage (July 2001, 1 week) was caused by a disk controller failure in their data servers. The business impact was severe — users migrated to competitors AIM and Yahoo Messenger, showing that prolonged outages permanently damage market share." },
+  { q: "In cloud computing, what is 'high availability' typically achieved through?", opts: ["Using a single very powerful server","Redundancy, automatic failover, and distribution across multiple zones/regions","Running processes as root","Manual monitoring by engineers 24/7"], ans: 1, exp: "High availability is achieved through: redundant hardware (multiple servers), automatic failover (switching to backup when primary fails), health checks, load balancing, and geographic distribution across availability zones/regions." },
+  { q: "What is the relationship between the number of 'nines' and downtime?", opts: ["More nines = more downtime allowed","More nines = less downtime allowed (each nine reduces allowed downtime by ~10x)","The nines count doesn't affect downtime","Fewer nines = less downtime"], ans: 1, exp: "Each additional nine reduces allowed downtime by roughly 10x: 90% → 36.5 days, 99% → 3.65 days, 99.9% → 8.76 hours, 99.99% → 52.56 minutes, 99.999% → 5.26 minutes. More nines = stricter availability requirement." },
+  { q: "What does the operations unit do regarding new technology transitions?", opts: ["Blocks new technology adoption to maintain stability","Facilitates smooth and continuous transitions to new technologies","Purchases all hardware for new technologies","Writes code for new technology integrations"], ans: 1, exp: "The operations unit's responsibility includes facilitating the continuity and ease of transition to new technologies — ensuring that adopting new tools, platforms, or infrastructure doesn't disrupt existing services." },
+  { q: "A company experiences 8.76 hours of downtime per year. What is their availability level?", opts: ["99% (2 nines)","99.99% (4 nines)","99.9% (3 nines)","99.999% (5 nines)"], ans: 2, exp: "8.76 hours of annual downtime corresponds to 99.9% (3 nines) availability. At this level, monthly downtime is 43.2 minutes. This is below the 5-nine standard but above the 2-nine level." },
+  { q: "What problem does cloud elasticity solve for e-commerce sites?", opts: ["Slow database queries","The need to maintain expensive excess capacity year-round to handle holiday traffic spikes","Security vulnerabilities","Slow page load times"], ans: 1, exp: "Cloud elasticity solves the over-provisioning problem for e-commerce. Without it, companies must maintain full holiday-peak capacity year-round (expensive). With elasticity, they scale up during peak season and scale down afterward, paying only for what they use." },
+  { q: "What is a key difference between traditional on-premise infrastructure and cloud infrastructure?", opts: ["Cloud is always faster","Traditional infrastructure can be provisioned in minutes; cloud requires weeks","Cloud provides on-demand resources; traditional requires upfront hardware purchase and long provisioning time","There is no meaningful difference"], ans: 2, exp: "The fundamental difference: Traditional infrastructure requires weeks/months of hardware procurement and setup. Cloud provides on-demand resources provisioned in minutes via a web interface or API, with no physical hardware to purchase." },
+  { q: "The operations unit is responsible for ensuring technical environments are 'competitively adequate.' This means:", opts: ["The environments must be faster than competitors' systems","Dev, Test, and Production environments must meet quality standards that support business competitiveness","All environments must use the same hardware","Environments must be certified by external auditors"], ans: 1, exp: "Making environments 'competitively adequate' means ensuring the Development, Test, and Production environments meet the technical quality needed to compete effectively in the business. This includes performance, reliability, and modern tooling." },
+  { q: "What is the annual downtime allowed at 99.99% (4 nines) availability?", opts: ["5.26 minutes","52.56 minutes","8.76 hours","3.65 days"], ans: 1, exp: "99.99% (4 nines) allows 52.56 minutes of downtime per year (4.32 minutes per month). This is a common enterprise SLA target. Achieving 5 nines (5.26 min/year) requires significantly more engineering investment." },
+  { q: "Which cloud benefit directly addresses the problem of 'buying based on predicted demand'?", opts: ["Global reach","Security","Pay-as-you-go and elasticity","Multi-tenancy"], ans: 2, exp: "Pay-as-you-go combined with elasticity directly addresses the traditional over-provisioning problem. Instead of buying capacity based on future predictions, you provision dynamically and pay only for actual consumption." },
+  { q: "What was the direct financial impact of the EBay 1998 outage?", opts: ["$1 million in losses","$3-5 million, plus discounts to affected users","$50 million in stock market losses","$10 million in regulatory fines"], ans: 1, exp: "The EBay June 1998 outage (1 day, caused by a critical listing software bug) cost $3-5 million. Additionally, users affected by the outage received discounts and refunds as compensation." },
+  { q: "In the traditional hardware model, servers are bought at times labeled 1 and 2 in the purchase model graph. What happens between purchases?", opts: ["Capacity perfectly matches demand","Capacity remains constant while real demand fluctuates — causing either waste or shortfall","Capacity automatically adjusts","Servers are rented on a daily basis"], ans: 1, exp: "In the traditional staircase model, hardware is purchased at discrete intervals (e.g., every 6-12 months). Between purchases, capacity stays flat while actual demand fluctuates. This creates periods of waste (excess capacity) and periods of shortage (insufficient capacity)." },
+  { q: "Which of these is NOT a characteristic of cloud computing?", opts: ["On-demand self-service","Pay-as-you-go pricing","Fixed annual capacity regardless of usage","Broad network access"], ans: 2, exp: "Fixed annual capacity is characteristic of the traditional hardware model, not cloud computing. Cloud computing is defined by on-demand self-service, pay-as-you-go pricing, elasticity, and broad network access — all enabling dynamic resource allocation." },
+  { q: "What does 'broad network access' mean in cloud computing?", opts: ["Having a very fast internet connection","Accessing cloud resources from any device over the internet (laptop, phone, tablet)","Having access to multiple internet providers","Network access that spans multiple countries"], ans: 1, exp: "Broad network access means cloud services are accessible over standard internet connections from any device — laptops, smartphones, tablets. This is in contrast to traditional on-premise infrastructure that requires being on-site or VPN." },
+  { q: "An oracle database outage example showed: 'customers tablespace full.' What was the lesson learned?", opts: ["Always use NoSQL databases in cloud","Intelligent capacity planning is needed — give systems at least 3 months of breathing room","Replace Oracle with open source databases","Hire more database administrators"], ans: 1, exp: "The Oracle example showed a tablespace full outage resolved at 2 AM by a DBA. The permanent solution: intelligent capacity planning, giving database servers and support teams at least 3 months of headroom before capacity limits are hit." },
+  { q: "What is the primary motivation for operations teams to automate routine tasks?", opts: ["To eliminate all human engineers","To approach the 99.999% availability goal — automation reduces human error and enables 24/7 operations","To reduce software development costs","To comply with regulatory requirements"], ans: 1, exp: "Automating routine operations is motivated by: (1) eliminating human error (a top cause of outages), (2) enabling 24/7 automated responses without waiting for on-call engineers, (3) achieving the sub-6-minute annual downtime target of 99.999% SLA." },
+  { q: "What does 'multi-tenancy' mean in cloud computing?", opts: ["Multiple cloud providers sharing one data center","Multiple customers sharing the same underlying physical infrastructure while remaining logically isolated","Running multiple operating systems on one server","Having multiple administrators for one account"], ans: 1, exp: "Multi-tenancy means multiple customers (tenants) share the same physical hardware/infrastructure. Each tenant is logically isolated — they cannot see each other's data. This sharing enables cloud providers to achieve economies of scale and offer lower prices." },
+  { q: "Why are routine operational solutions important for achieving 99.999% availability?", opts: ["They reduce the cost of hardware","Solutions to recurring failures (hardware, software, human error) become 'routine procedures' that can be automated — dramatically reducing response time and downtime","They eliminate the need for cloud services","They allow companies to buy less hardware"], ans: 1, exp: "When common failure modes (e.g., server restart, failover, scaling) are solved and automated into routine procedures, the response time drops from hours (manual) to seconds (automated). This is how 99.999% — only 5.26 minutes/year — becomes achievable." }
+];
+const N = 50;
+let answered = Array(N).fill(false);
+let score = 0;
+function buildQuiz() {
+  const container = document.getElementById('questions');
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    let html = '<div class="q-num">Question ' + (qi+1) + ' of ' + N + '</div><div class="q-text">' + q.q + '</div>';
+    q.opts.forEach((o, oi) => { html += '<div class="option" id="opt-' + qi + '-' + oi + '" onclick="answer(' + qi + ',' + oi + ')"><span class="letter">' + 'ABCD'[oi] + '.</span><span>' + o + '</span></div>'; });
+    html += '<div class="explanation" id="exp-' + qi + '"><strong>Explanation:</strong> ' + q.exp + '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+}
+function answer(qi, oi) {
+  if (answered[qi]) return;
+  answered[qi] = true;
+  const correct = questions[qi].ans;
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('opt-' + qi + '-' + i);
+    if (i === correct) el.classList.add('correct');
+    else if (i === oi) el.classList.add('wrong');
+    el.style.pointerEvents = 'none';
+  });
+  document.getElementById('exp-' + qi).classList.add('show');
+  if (oi === correct) score++;
+  document.getElementById('scorefill').style.width = (score/N*100) + '%';
+  document.getElementById('scoreval').textContent = score + ' / ' + N;
+}
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+buildQuiz();
+</script>
+</body>
+</html>

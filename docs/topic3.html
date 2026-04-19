@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE 322 — Topic 3: Docker Basic Commands</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 1.75rem 0 0.75rem; }
+  h3 { font-size: 15px; font-weight: 600; margin: 1.2rem 0 0.5rem; }
+  p { font-size: 15px; line-height: 1.75; margin-bottom: 0.65rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+  li { font-size: 14px; line-height: 1.8; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #e8e8e4; padding: 2px 6px; border-radius: 4px; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 13px; overflow-x: auto; margin: 0.75rem 0; font-family: 'SF Mono', monospace; line-height: 1.6; }
+  hr { border: none; border-top: 1px solid #e0e0d8; margin: 1.75rem 0; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.75rem; }
+  .tab-btn { padding: 9px 22px; border-radius: 8px; border: 1.5px solid #d0d0c8; background: #fff; color: #555; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: #1a3a6e; color: #fff; border-color: #1a3a6e; }
+  .tab-btn:hover:not(.active) { background: #f0f0eb; }
+  .section { display: none; } .section.active { display: block; }
+  .info-box { background: #eef4ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .success-box { background: #f0f9ec; border-left: 4px solid #4caf50; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 14px; }
+  th { background: #1a3a6e; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #e0e0d8; }
+  tr:nth-child(even) td { background: #f8f8f4; }
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: #fff; border-radius: 10px; border: 1px solid #e0e0d8; }
+  .score-track { flex: 1; height: 8px; background: #e5e5e0; border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; background: #3b7a3b; border-radius: 4px; transition: width 0.4s; width: 0%; }
+  .score-val { font-size: 15px; font-weight: 700; min-width: 60px; text-align: right; }
+  .q-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .q-num { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+  .q-text { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; line-height: 1.5; }
+  .option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e0e0d8; margin-bottom: 8px; cursor: pointer; font-size: 14px; line-height: 1.55; transition: background 0.1s; }
+  .option:hover { background: #f5f5f0; }
+  .option .letter { font-weight: 700; min-width: 20px; color: #555; }
+  .option.correct { background: #f0f9ec; border-color: #4caf50; }
+  .option.correct .letter { color: #2e7d32; }
+  .option.wrong { background: #fff0f0; border-color: #ef9999; }
+  .option.wrong .letter { color: #c62828; }
+  .explanation { display: none; margin-top: 10px; padding: 12px 14px; background: #f8f8f4; border-radius: 8px; font-size: 14px; color: #444; line-height: 1.7; border-left: 4px solid #4caf50; }
+  .explanation.show { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>CSE 322 — Cloud Computing Midterm</h1>
+  <p class="subtitle">Topic 3: Docker Basic Commands</p>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('lesson', this)">Lesson</button>
+    <button class="tab-btn" onclick="switchTab('quiz', this)">Quiz (50 Q)</button>
+  </div>
+  <div id="lesson" class="section active">
+    <h2 style="margin-top:0">1 · Container Registries & Images</h2>
+    <p>Docker images are stored in <strong>container registries</strong>. The default public registry is <strong>Docker Hub</strong> (hub.docker.com). Companies use private registries (AWS ECR, Azure Container Registry) for proprietary images.</p>
+    <pre>docker pull nginx           # pull from Docker Hub (default registry)
+docker pull nginx:1.23      # pull a specific version (tag)
+docker images               # list all locally stored images</pre>
+    <div class="info-box"><strong>Image tags:</strong> <code>nginx</code> = <code>nginx:latest</code>. Always specify a version tag in production to avoid unexpected updates when rebuilding.</div>
+    <hr>
+    <h2>2 · Running Containers</h2>
+    <pre>docker run nginx                        # run container (foreground)
+docker run -d nginx                     # run in detached (background) mode
+docker run --name web nginx             # run with custom name
+docker run -d --name web nginx          # detached + named
+docker run -p 8080:80 nginx             # port binding: host:container
+docker run -d -p 8080:80 --name web nginx  # all combined</pre>
+    <h3>Key docker run flags</h3>
+    <table>
+      <tr><th>Flag</th><th>Purpose</th><th>Example</th></tr>
+      <tr><td><code>-d</code></td><td>Detached mode — runs container in background</td><td><code>docker run -d nginx</code></td></tr>
+      <tr><td><code>--name</code></td><td>Assign a custom name to the container</td><td><code>docker run --name web nginx</code></td></tr>
+      <tr><td><code>-p</code></td><td>Port binding: hostPort:containerPort</td><td><code>docker run -p 8080:80 nginx</code></td></tr>
+      <tr><td><code>-e</code></td><td>Set environment variables</td><td><code>docker run -e MY_VAR=value nginx</code></td></tr>
+      <tr><td><code>-it</code></td><td>Interactive terminal (for shells)</td><td><code>docker run -it ubuntu bash</code></td></tr>
+    </table>
+    <hr>
+    <h2>3 · Port Binding</h2>
+    <p>By default, a container is isolated — its ports are NOT accessible from the host. Use <code>-p</code> to bind a host port to a container port:</p>
+    <pre>docker run -p 8080:80 nginx
+# Host port 8080 → Container port 80
+# Access via: http://localhost:8080
+
+docker run -p 3000:3000 node-app
+# Same port for host and container (common for dev)</pre>
+    <div class="warn-box"><strong>Format:</strong> <code>-p HOST_PORT:CONTAINER_PORT</code>. The container's internal port must match what the application listens on. Multiple ports: <code>-p 80:80 -p 443:443</code></div>
+    <hr>
+    <h2>4 · Container Lifecycle Commands</h2>
+    <pre>docker ps               # list running containers
+docker ps -a            # list all containers (including stopped)
+docker stop web         # gracefully stop container named 'web'
+docker start web        # start a stopped container
+docker restart web      # stop + start
+
+docker rm web           # remove a stopped container
+docker rm -f web        # force remove a running container
+
+docker rmi nginx        # remove an image
+docker rmi nginx:1.23   # remove a specific image tag</pre>
+    <div class="info-box"><strong>docker run vs docker start:</strong> <code>docker run</code> creates a new container from an image. <code>docker start</code> restarts an already-created (but stopped) container without creating a new one.</div>
+    <hr>
+    <h2>5 · Inspecting Containers</h2>
+    <pre>docker logs web             # view logs of container 'web'
+docker logs -f web          # follow (tail) logs in real time
+docker logs --tail 100 web  # last 100 lines of logs
+
+docker exec -it web bash    # open a bash shell inside running container
+docker exec web ls /app     # run a single command inside container
+
+docker inspect web          # detailed JSON info about container
+docker stats                # live resource usage (CPU, RAM) for all containers</pre>
+    <div class="success-box"><strong>docker exec -it container bash</strong> — the most useful debugging command. Opens an interactive shell inside a running container so you can inspect files, check processes, and run commands.</div>
+    <hr>
+    <h2>6 · Image Management</h2>
+    <pre>docker images               # list images with REPOSITORY, TAG, IMAGE ID, SIZE
+docker image ls             # same as docker images
+docker rmi image_id         # remove image by ID
+docker image prune          # remove all dangling (unused) images
+docker system prune         # remove all stopped containers, unused images, volumes
+
+docker tag myapp:latest myapp:v1.0    # tag an image
+docker push myrepo/myapp:v1.0         # push to registry</pre>
+    <hr>
+    <h2>7 · Pushing to a Private Registry (AWS ECR)</h2>
+    <p>To push an image to AWS ECR (Elastic Container Registry):</p>
+    <pre># Step 1: Authenticate Docker to ECR
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin \
+  123456789.dkr.ecr.us-east-1.amazonaws.com
+
+# Step 2: Tag image for ECR
+docker tag myapp:latest \
+  123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:latest
+
+# Step 3: Push to ECR
+docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:latest</pre>
+    <div style="margin-top:1.5rem"><button class="tab-btn" onclick="switchTab('quiz', this)">Go to Quiz →</button></div>
+  </div>
+  <div id="quiz" class="section">
+    <div class="score-row"><span style="font-size:14px;font-weight:600;min-width:55px">Score</span><div class="score-track"><div class="score-fill" id="scorefill"></div></div><span class="score-val" id="scoreval">0 / 50</span></div>
+    <div id="questions"></div>
+  </div>
+</div>
+<script>
+const questions = [
+  { q: "What does 'docker pull nginx' do?", opts: ["Runs an nginx container","Downloads the nginx image from Docker Hub to local storage","Pushes a local nginx image to Docker Hub","Creates a new nginx image from scratch"], ans: 1, exp: "docker pull downloads (pulls) an image from a container registry (Docker Hub by default) to local storage. It doesn't run anything — it just fetches the image layers so you can run it later with docker run." },
+  { q: "What is Docker Hub?", opts: ["A cloud compute service","The default public container image registry where Docker images are stored and shared","A Docker monitoring dashboard","A Kubernetes cluster manager"], ans: 1, exp: "Docker Hub (hub.docker.com) is the default public container registry. It hosts official images (nginx, postgres, python, etc.) and user-published images. When you run 'docker pull nginx', it pulls from Docker Hub by default." },
+  { q: "What does 'docker run -d nginx' do?", opts: ["Runs nginx in development mode","Downloads nginx image","Runs an nginx container in detached (background) mode","Deletes the nginx image"], ans: 2, exp: "The -d flag means detached mode — the container runs in the background and returns the terminal to the user immediately. Without -d, the container runs in the foreground and blocks the terminal." },
+  { q: "What is the correct port binding syntax for docker run?", opts: ["-p containerPort:hostPort","-p hostPort:containerPort","-p hostPort/containerPort","--port host=hostPort,container=containerPort"], ans: 1, exp: "The correct syntax is -p hostPort:containerPort (host first, container second). Example: -p 8080:80 maps host port 8080 to container port 80. Access via http://localhost:8080 which forwards to nginx's port 80." },
+  { q: "What does 'docker run -p 3000:3000 node-app' do?", opts: ["Runs node-app and blocks port 3000 on all interfaces","Maps host port 3000 to container port 3000, making the app accessible at localhost:3000","Starts 3000 instances of node-app","Limits the container to 3000MB of RAM"], ans: 1, exp: "docker run -p 3000:3000 node-app maps host port 3000 to container's internal port 3000. The node-app must listen on port 3000 inside the container. Without -p, the port would be unreachable from outside the container." },
+  { q: "What does 'docker ps' show?", opts: ["All Docker images on the system","All currently running containers with their IDs, names, status, and port mappings","Stopped containers only","Docker Hub search results"], ans: 1, exp: "docker ps shows a table of currently RUNNING containers: CONTAINER ID, IMAGE, COMMAND, CREATED, STATUS, PORTS, NAMES. It does NOT show stopped containers. Use docker ps -a to see all containers including stopped ones." },
+  { q: "What does 'docker ps -a' do differently from 'docker ps'?", opts: ["Shows all images not just containers","Shows all containers including stopped ones, not just running ones","Shows advanced statistics","Shows all Docker processes on all machines"], ans: 1, exp: "docker ps -a (--all) shows ALL containers regardless of state: running, stopped, exited, paused, created. Without -a, only running containers are shown. Useful to find stopped containers you want to restart or remove." },
+  { q: "What does 'docker stop web' do?", opts: ["Immediately kills the container named 'web'","Gracefully stops the container named 'web' by sending SIGTERM, then SIGKILL after timeout","Pauses the container named 'web'","Removes the container named 'web'"], ans: 1, exp: "docker stop sends SIGTERM to the main process inside the container, giving it time to shut down gracefully. After a timeout (default 10s), SIGKILL is sent. This is the proper way to stop a container." },
+  { q: "What is the difference between 'docker stop' and 'docker rm'?", opts: ["They do the same thing","docker stop stops a running container; docker rm removes a stopped container from the system","docker rm stops and removes in one step; docker stop only pauses","docker stop deletes the container; docker rm keeps it"], ans: 1, exp: "docker stop: stops a running container (it still exists, just not running). docker rm: deletes a stopped container permanently. To clean up: first stop, then rm. Or use docker rm -f to force-remove a running container." },
+  { q: "What does '--name web' do in a docker run command?", opts: ["Sets the container's hostname to 'web'","Assigns the custom name 'web' to the container for easier reference","Creates a Docker network named 'web'","Sets the image name to 'web'"], ans: 1, exp: "The --name flag assigns a human-readable name to the container. Without it, Docker auto-generates a random name (e.g., 'eloquent_darwin'). Named containers are easier to manage: docker stop web, docker logs web, etc." },
+  { q: "What is the difference between 'docker run' and 'docker start'?", opts: ["They are identical commands","docker run creates and starts a new container from an image; docker start restarts an existing stopped container","docker start creates a new container; docker run restarts an existing one","docker run only works with remote images; docker start works with local images"], ans: 1, exp: "docker run = create + start (from an image blueprint). docker start = restart an existing container that was previously created/stopped. docker start is faster because no image setup is needed — the container already exists." },
+  { q: "What does 'docker logs web' show?", opts: ["The Docker Engine logs","The stdout/stderr output from the container named 'web'","System logs from the host machine","Network traffic logs for the container"], ans: 1, exp: "docker logs shows the stdout and stderr output captured from the container. Everything the containerized application prints to its console is captured and viewable with docker logs. Use -f to follow in real time." },
+  { q: "What does 'docker logs -f web' do?", opts: ["Shows the first logs from the container","Formats logs in JSON","Follows (tails) the logs in real time — new log lines appear as they are generated","Filters logs by error level"], ans: 2, exp: "The -f (--follow) flag tails the logs in real time, similar to 'tail -f' in Linux. New log lines appear in your terminal as the container generates them. Press Ctrl+C to stop following." },
+  { q: "What does 'docker exec -it web bash' do?", opts: ["Executes web.bash script in the container","Opens an interactive bash shell inside the running container named 'web'","Creates a new container named web and runs bash","Exports the container filesystem to bash format"], ans: 1, exp: "docker exec -it web bash: exec = run a command in a running container, -i = interactive (stdin open), -t = allocate a pseudo-TTY, web = container name, bash = command to run. Result: you get a shell prompt inside the container." },
+  { q: "What does 'docker rmi nginx' do?", opts: ["Removes the running nginx container","Removes the nginx image from local storage","Runs nginx with minimum resources","Resets nginx image to minimum configuration"], ans: 1, exp: "docker rmi (remove image) deletes the specified image from local storage. You cannot remove an image that has a running container using it. First stop/remove the container, then remove the image. Use docker rmi -f to force." },
+  { q: "What does 'docker images' display?", opts: ["Running containers","All locally stored Docker images with REPOSITORY, TAG, IMAGE ID, CREATED, SIZE","Docker Hub search results","Container resource usage"], ans: 1, exp: "docker images (or docker image ls) displays all Docker images stored locally: REPOSITORY (image name), TAG (version), IMAGE ID (hash), CREATED (when pulled/built), SIZE (disk space used). No running state information." },
+  { q: "How would you pull a specific version of nginx, not the latest?", opts: ["docker pull nginx --version=1.23","docker pull nginx:1.23","docker pull nginx@1.23","docker pull -v 1.23 nginx"], ans: 1, exp: "Use the colon notation: docker pull nginx:1.23. The part after the colon is the tag (version). 'docker pull nginx' is equivalent to 'docker pull nginx:latest'. Always pin versions in production to avoid unexpected changes." },
+  { q: "What is the purpose of the '-e' flag in docker run?", opts: ["Enable error logging","Execute a command after container starts","Set environment variables inside the container","Enable experimental features"], ans: 2, exp: "The -e (--env) flag sets environment variables in the container: docker run -e DB_HOST=localhost -e DB_PORT=5432 myapp. This is how you pass configuration (database URLs, API keys, etc.) to containers without hardcoding them in the image." },
+  { q: "What does 'docker rm -f web' do?", opts: ["Removes all files from the 'web' container","Force-removes the container named 'web' even if it is running","Removes the 'web' Docker network","Removes the 'web' Docker volume"], ans: 1, exp: "docker rm -f (force) removes a container even if it's currently running. It sends SIGKILL immediately (no graceful shutdown). Without -f, docker rm only works on stopped containers. Useful for quick cleanup." },
+  { q: "What is the default registry Docker uses when you don't specify one?", opts: ["Amazon ECR","Google Container Registry","Docker Hub (hub.docker.com)","GitHub Container Registry"], ans: 2, exp: "Docker Hub (hub.docker.com) is the default public registry. When you run 'docker pull nginx', Docker looks for 'library/nginx' on Docker Hub. To use a different registry, specify the full URL: docker pull myregistry.azurecr.io/myimage." },
+  { q: "What does 'docker run -it ubuntu bash' accomplish?", opts: ["Runs Ubuntu in detached mode with bash","Starts Ubuntu container and opens an interactive bash shell in the foreground","Installs bash on Ubuntu image","Tests Ubuntu with interactive mode disabled"], ans: 1, exp: "-i = interactive (keep stdin open), -t = allocate pseudo-TTY (terminal), ubuntu = image, bash = command. Result: you get an interactive shell inside a new Ubuntu container. Type 'exit' to leave (and stop the container)." },
+  { q: "What happens to container data when you run 'docker rm web'?", opts: ["Data is saved to the host filesystem","Data written inside the container (not in volumes) is permanently deleted","Data is moved to Docker Hub","Data is archived as a new image"], ans: 1, exp: "When a container is removed with docker rm, all data written inside the container's writable layer is permanently lost. This is why persistent data must be stored in Docker volumes (which survive container removal)." },
+  { q: "How do you force-remove an image even if it has dependent containers?", opts: ["docker rmi --force nginx","docker rmi -f nginx","docker remove -f nginx","docker image delete nginx"], ans: 1, exp: "docker rmi -f (or --force) forces removal of the image even if containers were created from it. Note: if a container is currently using the image, the image may be 'untagged' but not fully removed until the container is also removed." },
+  { q: "What does 'docker restart web' do?", opts: ["Restarts the Docker daemon","Performs docker stop + docker start on the 'web' container","Creates a fresh container from the same image","Restarts the host machine"], ans: 1, exp: "docker restart is equivalent to docker stop + docker start. It stops the container (SIGTERM, then SIGKILL), then starts it again. The container keeps its configuration, volumes, and name. Useful after config changes." },
+  { q: "What is the format for the 'docker tag' command?", opts: ["docker tag SOURCE_IMAGE TARGET_IMAGE","docker tag TARGET_IMAGE SOURCE_IMAGE","docker tag IMAGE --name NEW_NAME","docker tag IMAGE:TAG --new TAG"], ans: 0, exp: "docker tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]. Example: docker tag myapp:latest myrepo/myapp:v1.0. This creates a new tag (alias) for an existing image. Used before pushing to a different registry." },
+  { q: "What is AWS ECR?", opts: ["Amazon's Elastic Compute Runtime","Amazon Elastic Container Registry — a private Docker image registry service by AWS","Amazon's CLI tool for containers","Amazon's container orchestration service"], ans: 1, exp: "AWS ECR (Elastic Container Registry) is Amazon's managed private Docker image registry. You push your Docker images there and pull from it in your EC2 instances, ECS tasks, or EKS pods. More secure and faster than Docker Hub for AWS workloads." },
+  { q: "What are the 3 steps to push an image to AWS ECR?", opts: ["build, tag, push","authenticate, tag, push","pull, build, push","login, run, push"], ans: 1, exp: "The 3 steps to push to AWS ECR: (1) Authenticate Docker with AWS credentials using aws ecr get-login-password, (2) Tag the image with the ECR registry URL (docker tag), (3) Push the image (docker push)." },
+  { q: "What does 'docker inspect web' return?", opts: ["Log files from the container","Detailed JSON configuration about the container: network settings, volumes, environment variables, etc.","A list of all images","The Dockerfile used to build the image"], ans: 1, exp: "docker inspect returns detailed JSON information about a container or image: network configuration, IP addresses, volumes, environment variables, start command, resource limits, restart policy, and more. Useful for debugging." },
+  { q: "What does 'docker stats' display?", opts: ["Static container configuration","Live real-time resource usage (CPU %, Memory, Network I/O) for all running containers","Image sizes and layer counts","Log files for all containers"], ans: 1, exp: "docker stats shows a live table of resource usage for all running containers: CPU %, Memory usage/limit, Net I/O, Block I/O. It updates continuously. Press Ctrl+C to exit. Similar to the 'top' command but for containers." },
+  { q: "What does 'docker system prune' do?", opts: ["Reboots the Docker daemon","Removes all stopped containers, dangling images, unused networks, and build cache","Updates Docker to the latest version","Moves all images to Docker Hub"], ans: 1, exp: "docker system prune is a cleanup command that removes: all stopped containers, all dangling (untagged) images, all unused networks, and build cache. Add -a to also remove all unused images (not just dangling). Frees up disk space." },
+  { q: "What does 'docker exec web ls /app' do?", opts: ["Lists files in /app on the host machine","Runs the 'ls /app' command inside the running container named 'web' and shows the output","Creates a /app directory inside the container","Lists all containers named 'web'"], ans: 1, exp: "docker exec runs a command inside an already-running container. 'docker exec web ls /app' runs 'ls /app' inside the 'web' container and prints the file listing to your terminal. No -it needed for non-interactive commands." },
+  { q: "What is a 'dangling image' in Docker?", opts: ["An image from Docker Hub that is no longer maintained","An untagged image (shown as <none>:<none>) that is no longer referenced by any container or tagged image","An image that failed to build completely","An image with expired certificates"], ans: 1, exp: "A dangling image is an intermediate image layer that is no longer referenced by any tag or container. They appear as <none>:<none> in docker images. They waste disk space and can be cleaned up with 'docker image prune'." },
+  { q: "How do you view the last 100 lines of logs from a container?", opts: ["docker logs web -n 100","docker logs --tail 100 web","docker logs web --last 100","docker logs -100 web"], ans: 1, exp: "Use 'docker logs --tail 100 web' to see the last 100 log lines. You can combine with -f to follow from the last 100 lines: 'docker logs --tail 100 -f web'. The --tail flag accepts a number or 'all'." },
+  { q: "What is the difference between 'docker rm' and 'docker rmi'?", opts: ["They do the same thing","docker rm removes containers; docker rmi removes images","docker rmi removes containers; docker rm removes images","docker rm removes everything; docker rmi only removes tags"], ans: 1, exp: "docker rm: removes containers (the running/stopped instances). docker rmi (remove image): removes images (the blueprints stored locally). Common workflow: stop → rm container → rmi image to fully clean up." },
+  { q: "What does 'docker run -p 8080:80 -p 443:443 nginx' do?", opts: ["Runs nginx on port 8080 only","Maps host port 8080 to container port 80 AND host port 443 to container port 443 (multiple port bindings)","Limits nginx to 8080 connections","Creates two separate nginx containers"], ans: 1, exp: "Multiple -p flags bind multiple ports. -p 8080:80 maps HTTP (host 8080 → container 80) and -p 443:443 maps HTTPS (host 443 → container 443). This allows both HTTP and HTTPS traffic to reach nginx." },
+  { q: "What does 'docker pull nginx:1.23' vs 'docker pull nginx' pull?", opts: ["They pull the same image","nginx:1.23 pulls the specific version 1.23; 'docker pull nginx' pulls the 'latest' tag","nginx:1.23 is invalid syntax","docker pull nginx pulls version 1.23 by default"], ans: 1, exp: "'docker pull nginx' = 'docker pull nginx:latest' — pulls the most recent version. 'docker pull nginx:1.23' pulls specifically version 1.23. In production, always pin to specific versions to prevent unexpected behavior from automatic upgrades." },
+  { q: "You want to run a MySQL container with a password set. Which command is correct?", opts: ["docker run mysql --password=secret","docker run -e MYSQL_ROOT_PASSWORD=secret mysql","docker run --set-env MYSQL_ROOT_PASSWORD=secret mysql","docker run mysql -p secret"], ans: 1, exp: "Use -e (--env) to pass environment variables: docker run -e MYSQL_ROOT_PASSWORD=secret mysql. MySQL's official image reads this env var to set the root password. This is the standard way to configure containerized services." },
+  { q: "What does 'docker image prune' do?", opts: ["Removes all local Docker images","Removes only dangling (untagged/unused) images from local storage","Removes all container volumes","Updates all images to their latest versions"], ans: 1, exp: "docker image prune removes only dangling images — those with no tag and not referenced by any container. These accumulate during builds. To also remove all unused images (not just dangling), use 'docker image prune -a'." },
+  { q: "How do you gracefully stop ALL running containers at once?", opts: ["docker stop all","docker stop $(docker ps -q)","docker kill --all","docker rm -a"], ans: 1, exp: "$(docker ps -q) outputs just the container IDs of all running containers. Passing this to docker stop: 'docker stop $(docker ps -q)' stops all running containers gracefully. This is a common bash idiom for bulk operations." },
+  { q: "What is the purpose of 'docker tag myapp:latest 123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:latest'?", opts: ["Renames the image permanently","Creates a new tag alias pointing to the ECR registry URL — required before pushing to ECR","Copies the image to ECR directly","Verifies the image is compatible with ECR"], ans: 1, exp: "Before pushing to AWS ECR, you must tag the image with the full ECR repository URL. The tag is how Docker knows WHICH registry to push to. Without this step, docker push would try to push to Docker Hub." },
+  { q: "What does 'docker logs --tail 0 -f web' do?", opts: ["Shows no logs and exits","Follows logs in real time from now (shows only new log lines, not historical ones)","Shows an error because --tail 0 is invalid","Shows all historical logs"], ans: 1, exp: "'--tail 0' means show 0 historical lines. Combined with -f (follow), you see only NEW log lines generated after the command runs. This is useful when you don't want to scroll through existing logs — just watch what's happening now." },
+  { q: "What is the purpose of the '-i' flag in 'docker exec -it'?", opts: ["Install dependencies","Keep stdin open (interactive mode) — allows you to type input to the container process","Ignore container errors","Initialize the container"], ans: 1, exp: "The -i flag keeps stdin (standard input) open, allowing you to send keyboard input to the process inside the container. Without -i, the shell would immediately close since there's no interactive input. Combined with -t for a proper interactive terminal." },
+  { q: "What is the purpose of the '-t' flag in 'docker exec -it'?", opts: ["Transfer files","Set a timeout","Allocate a pseudo-TTY (terminal) — makes the shell behave like a real terminal with prompts and colors","Tag the container"], ans: 2, exp: "The -t flag allocates a pseudo-TTY, which makes the shell work like a real terminal: shows prompts, handles special characters, supports colors, and allows proper cursor movement. Without -t, some programs don't work correctly in interactive mode." },
+  { q: "A container is stopped. Which command starts it again WITHOUT creating a new container?", opts: ["docker run nginx","docker start web","docker create nginx","docker restart --create web"], ans: 1, exp: "docker start restarts an existing stopped container. 'docker run' would create a BRAND NEW container from the image. If you want the same container (with its data and config), use docker start. Use docker ps -a to see stopped containers." },
+  { q: "What does 'docker run --name web -d -p 80:80 nginx' do step by step?", opts: ["Creates nginx image, names it web, and starts it interactively","Pulls nginx if needed, creates a container named 'web', runs it in detached mode with host port 80 mapped to container port 80","Builds nginx from Dockerfile, names it web, runs on port 80","Pushes nginx to Docker Hub as 'web'"], ans: 1, exp: "Step by step: (1) If nginx image not local, pull from Docker Hub. (2) Create a container named 'web' from the nginx image. (3) -d: run in background. (4) -p 80:80: map host port 80 to container port 80. (5) nginx accessible at http://localhost." },
+  { q: "What output does 'docker ps' show in the PORTS column?", opts: ["The Docker Hub URL for the image","Port mappings between host and container, e.g., 0.0.0.0:8080->80/tcp","The container's internal IP address","The container's process ID"], ans: 1, exp: "The PORTS column shows how host ports are mapped to container ports, e.g., '0.0.0.0:8080->80/tcp' means host port 8080 is forwarded to container port 80/tcp. '0.0.0.0' means it's accessible on all host network interfaces." },
+  { q: "What happens if you try to 'docker rm' a running container without -f?", opts: ["The container is stopped and removed","Docker shows an error: cannot remove a running container","The container is paused","Docker removes the container after waiting 30 seconds"], ans: 1, exp: "docker rm fails with an error if the container is running: 'Error response from daemon: You cannot remove a running container.' First stop it (docker stop), then remove (docker rm). Or use docker rm -f to force-remove without stopping first." },
+  { q: "How do you pull a private image from AWS ECR?", opts: ["docker pull ecr://myimage","First authenticate with 'aws ecr get-login-password | docker login ...', then 'docker pull 123456789.dkr.ecr.us-east-1.amazonaws.com/myimage'","docker pull --private myimage","docker ecr pull myimage"], ans: 1, exp: "For AWS ECR: (1) Run 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789.dkr.ecr.us-east-1.amazonaws.com'. (2) Then docker pull the full ECR image URL. Authentication is required for private registries." },
+  { q: "What does 'docker run' do if the specified image is not available locally?", opts: ["It shows an error and exits","It automatically pulls the image from Docker Hub before running it","It waits until the image is manually provided","It builds the image from the current directory's Dockerfile"], ans: 1, exp: "If the image is not local, docker run automatically pulls it from the default registry (Docker Hub) before running. This is equivalent to: docker pull nginx && docker run nginx. Subsequent docker run commands use the locally cached image." },
+  { q: "What is the correct command to see which ports are mapped for a container?", opts: ["docker ports web","docker port web","docker inspect web | grep Port","Both B and C are correct"], ans: 3, exp: "Both 'docker port web' (shows port mappings directly) and 'docker inspect web' (shows full JSON including port bindings) can reveal port mappings. 'docker ps' also shows ports in the PORTS column for running containers." }
+];
+const N = 50;
+let answered = Array(N).fill(false);
+let score = 0;
+function buildQuiz() {
+  const container = document.getElementById('questions');
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    let html = '<div class="q-num">Question ' + (qi+1) + ' of ' + N + '</div><div class="q-text">' + q.q + '</div>';
+    q.opts.forEach((o, oi) => { html += '<div class="option" id="opt-' + qi + '-' + oi + '" onclick="answer(' + qi + ',' + oi + ')"><span class="letter">' + 'ABCD'[oi] + '.</span><span>' + o + '</span></div>'; });
+    html += '<div class="explanation" id="exp-' + qi + '"><strong>Explanation:</strong> ' + q.exp + '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+}
+function answer(qi, oi) {
+  if (answered[qi]) return;
+  answered[qi] = true;
+  const correct = questions[qi].ans;
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('opt-' + qi + '-' + i);
+    if (i === correct) el.classList.add('correct');
+    else if (i === oi) el.classList.add('wrong');
+    el.style.pointerEvents = 'none';
+  });
+  document.getElementById('exp-' + qi).classList.add('show');
+  if (oi === correct) score++;
+  document.getElementById('scorefill').style.width = (score/N*100) + '%';
+  document.getElementById('scoreval').textContent = score + ' / ' + N;
+}
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+buildQuiz();
+</script>
+</body>
+</html>

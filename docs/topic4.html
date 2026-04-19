@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE 322 — Topic 4: Dockerfile & Image Building</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 1.75rem 0 0.75rem; }
+  h3 { font-size: 15px; font-weight: 600; margin: 1.2rem 0 0.5rem; }
+  p { font-size: 15px; line-height: 1.75; margin-bottom: 0.65rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+  li { font-size: 14px; line-height: 1.8; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #e8e8e4; padding: 2px 6px; border-radius: 4px; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 13px; overflow-x: auto; margin: 0.75rem 0; font-family: 'SF Mono', monospace; line-height: 1.6; }
+  hr { border: none; border-top: 1px solid #e0e0d8; margin: 1.75rem 0; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.75rem; }
+  .tab-btn { padding: 9px 22px; border-radius: 8px; border: 1.5px solid #d0d0c8; background: #fff; color: #555; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: #1a3a6e; color: #fff; border-color: #1a3a6e; }
+  .tab-btn:hover:not(.active) { background: #f0f0eb; }
+  .section { display: none; } .section.active { display: block; }
+  .info-box { background: #eef4ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .success-box { background: #f0f9ec; border-left: 4px solid #4caf50; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 14px; }
+  th { background: #1a3a6e; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #e0e0d8; }
+  tr:nth-child(even) td { background: #f8f8f4; }
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: #fff; border-radius: 10px; border: 1px solid #e0e0d8; }
+  .score-track { flex: 1; height: 8px; background: #e5e5e0; border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; background: #3b7a3b; border-radius: 4px; transition: width 0.4s; width: 0%; }
+  .score-val { font-size: 15px; font-weight: 700; min-width: 60px; text-align: right; }
+  .q-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .q-num { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+  .q-text { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; line-height: 1.5; }
+  .option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e0e0d8; margin-bottom: 8px; cursor: pointer; font-size: 14px; line-height: 1.55; transition: background 0.1s; }
+  .option:hover { background: #f5f5f0; }
+  .option .letter { font-weight: 700; min-width: 20px; color: #555; }
+  .option.correct { background: #f0f9ec; border-color: #4caf50; }
+  .option.correct .letter { color: #2e7d32; }
+  .option.wrong { background: #fff0f0; border-color: #ef9999; }
+  .option.wrong .letter { color: #c62828; }
+  .explanation { display: none; margin-top: 10px; padding: 12px 14px; background: #f8f8f4; border-radius: 8px; font-size: 14px; color: #444; line-height: 1.7; border-left: 4px solid #4caf50; }
+  .explanation.show { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>CSE 322 — Cloud Computing Midterm</h1>
+  <p class="subtitle">Topic 4: Dockerfile & Image Building</p>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('lesson', this)">Lesson</button>
+    <button class="tab-btn" onclick="switchTab('quiz', this)">Quiz (50 Q)</button>
+  </div>
+  <div id="lesson" class="section active">
+    <h2 style="margin-top:0">1 · What is a Dockerfile?</h2>
+    <p>A <strong>Dockerfile</strong> is a text file with instructions that Docker (BuildKit) reads to build a Docker image. Each instruction creates a <strong>layer</strong> in the image.</p>
+    <pre># A sample Dockerfile for a Python app
+FROM python:3.12.2-slim      # base image
+WORKDIR /app                  # set working directory
+COPY requirements.txt .       # copy requirements first
+RUN pip install -r requirements.txt  # install dependencies
+COPY . .                      # copy application code last
+CMD ["python", "app.py"]      # default command to run</pre>
+    <div class="info-box">The order of Dockerfile instructions matters for <strong>layer caching</strong>. Put frequently changing files (source code) at the END. Put stable files (requirements) BEFORE the code.</div>
+    <hr>
+    <h2>2 · Dockerfile Instructions</h2>
+    <table>
+      <tr><th>Instruction</th><th>Purpose</th><th>Example</th></tr>
+      <tr><td><code>FROM</code></td><td>Base image to build on (must be first)</td><td><code>FROM python:3.12.2-slim</code></td></tr>
+      <tr><td><code>WORKDIR</code></td><td>Set working directory inside container</td><td><code>WORKDIR /app</code></td></tr>
+      <tr><td><code>COPY</code></td><td>Copy files from host to container image</td><td><code>COPY requirements.txt .</code></td></tr>
+      <tr><td><code>RUN</code></td><td>Execute a command during build; creates a layer</td><td><code>RUN pip install -r requirements.txt</code></td></tr>
+      <tr><td><code>CMD</code></td><td>Default command when container starts (can be overridden)</td><td><code>CMD ["python", "app.py"]</code></td></tr>
+      <tr><td><code>ENTRYPOINT</code></td><td>Main executable (harder to override than CMD)</td><td><code>ENTRYPOINT ["gunicorn", "app:app"]</code></td></tr>
+      <tr><td><code>ENV</code></td><td>Set environment variables in the image</td><td><code>ENV PORT=8080</code></td></tr>
+      <tr><td><code>EXPOSE</code></td><td>Document which port the container listens on</td><td><code>EXPOSE 8080</code></td></tr>
+      <tr><td><code>ADD</code></td><td>Like COPY but can also download URLs and extract archives</td><td><code>ADD app.tar.gz /app</code></td></tr>
+      <tr><td><code>USER</code></td><td>Set the user to run container processes as</td><td><code>USER app</code></td></tr>
+      <tr><td><code>ARG</code></td><td>Build-time variables (not available at runtime)</td><td><code>ARG VERSION=1.0</code></td></tr>
+    </table>
+    <hr>
+    <h2>3 · Layer Caching</h2>
+    <p>Docker caches each step (instruction) in the Dockerfile to speed up subsequent builds. This is called the <strong>build cache</strong>:</p>
+    <ul>
+      <li>If a layer hasn't changed, Docker reuses the cached version — very fast</li>
+      <li>When a layer CHANGES, that layer and ALL subsequent layers are invalidated and rebuilt</li>
+      <li>This is why order matters: put stable steps first, changing steps last</li>
+    </ul>
+    <div class="warn-box">
+      <strong>Bad order (inefficient):</strong><br>
+      <code>COPY . .</code> → <code>RUN pip install -r requirements.txt</code><br>
+      Every code change triggers a full pip install!<br><br>
+      <strong>Good order (cache-friendly):</strong><br>
+      <code>COPY requirements.txt .</code> → <code>RUN pip install -r requirements.txt</code> → <code>COPY . .</code><br>
+      Only requirements changes trigger pip install. Code changes only rebuild the last COPY layer.
+    </div>
+    <hr>
+    <h2>4 · COPY vs ADD</h2>
+    <p>Both COPY and ADD copy files into the image, but they have differences:</p>
+    <table>
+      <tr><th>Feature</th><th>COPY</th><th>ADD</th></tr>
+      <tr><td>Copy local files</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Download from URL</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Extract tar.gz archives</td><td>No</td><td>Yes (auto-extracts)</td></tr>
+      <tr><td>Recommended for</td><td>Most use cases</td><td>Only when URL/archive needed</td></tr>
+    </table>
+    <div class="success-box"><strong>Best Practice: Prefer COPY over ADD</strong> for copying local files. ADD's extra features (URL download, auto-extract) can cause unexpected behavior. Use COPY for clarity and predictability.</div>
+    <hr>
+    <h2>5 · CMD vs ENTRYPOINT</h2>
+    <pre># CMD — default command, can be fully overridden
+CMD ["python", "app.py"]
+# docker run myimage python other.py   ← overrides CMD
+
+# ENTRYPOINT — main executable, harder to override
+ENTRYPOINT ["gunicorn"]
+CMD ["app:app", "-w", "4"]             # default args to ENTRYPOINT
+# docker run myimage app:api           ← replaces CMD args only
+
+# Array (exec) form — preferred
+CMD ["gunicorn", "-w", "4", "app:app"]
+
+# String (shell) form — avoid
+CMD "gunicorn -w 4 app:app"</pre>
+    <div class="info-box"><strong>Best Practice: Prefer Array (exec) form over String (shell) form</strong> for CMD and ENTRYPOINT. Array form: <code>["command", "arg1"]</code> — runs directly. String form: <code>"command arg1"</code> — runs via /bin/sh -c, which can cause signal handling issues.</div>
+    <hr>
+    <h2>6 · Base Images & Best Practices</h2>
+    <h3>Choose Smaller Base Images</h3>
+    <table>
+      <tr><th>Tag</th><th>Size</th><th>Use When</th></tr>
+      <tr><td><code>python:3.12.2-bookworm</code></td><td>1.02 GB</td><td>Need full Debian environment</td></tr>
+      <tr><td><code>python:3.12.2-slim</code></td><td>130 MB</td><td>Most production use cases ✓</td></tr>
+      <tr><td><code>python:3.12.2-alpine</code></td><td>51.8 MB</td><td>Smallest; use if no C extensions</td></tr>
+    </table>
+    <h3>Minimize Number of Layers</h3>
+    <p>RUN, COPY, and ADD each create a new layer that increases image size. Combine RUN commands with &&:</p>
+    <pre># Bad — creates 2 layers
+RUN apt-get update
+RUN apt-get install -y netcat
+
+# Good — creates 1 layer
+RUN apt-get update && apt-get install -y netcat</pre>
+    <h3>Use Unprivileged Containers</h3>
+    <p>By default Docker runs as root — a security risk. Use a non-root user:</p>
+    <pre>RUN addgroup --system app && adduser --system --group app
+USER app</pre>
+    <h3>One Process Per Container</h3>
+    <p>Run each service in its own container. Easier to scale and reuse individual services.</p>
+    <hr>
+    <h2>7 · Building Images</h2>
+    <pre>docker build -t myapp:latest .         # build from current directory
+docker build -t myapp:v1.0 .           # build with version tag
+docker build -f MyDockerfile -t myapp . # use specific Dockerfile
+docker history myapp:latest            # show layers and sizes</pre>
+    <div style="margin-top:1.5rem"><button class="tab-btn" onclick="switchTab('quiz', this)">Go to Quiz →</button></div>
+  </div>
+  <div id="quiz" class="section">
+    <div class="score-row"><span style="font-size:14px;font-weight:600;min-width:55px">Score</span><div class="score-track"><div class="score-fill" id="scorefill"></div></div><span class="score-val" id="scoreval">0 / 50</span></div>
+    <div id="questions"></div>
+  </div>
+</div>
+<script>
+const questions = [
+  { q: "What is a Dockerfile?", opts: ["A Docker container that runs files","A text file with instructions that Docker/BuildKit reads to build a Docker image","A configuration file for Docker Hub","A script that starts Docker containers"], ans: 1, exp: "A Dockerfile is a text file containing a series of instructions (FROM, WORKDIR, COPY, RUN, CMD, etc.) that Docker's BuildKit reads sequentially to build a Docker image. Each instruction creates a layer." },
+  { q: "Which Dockerfile instruction MUST be the first instruction?", opts: ["WORKDIR","RUN","FROM","CMD"], ans: 2, exp: "FROM must be the first instruction in a Dockerfile. It specifies the base image to build upon (e.g., FROM python:3.12.2-slim). Everything else builds on top of this base image. Exception: ARG can come before FROM." },
+  { q: "What does 'FROM python:3.12.2-slim' do?", opts: ["Installs Python 3.12.2 from scratch","Sets the base image to Python 3.12.2 slim variant — a pre-built minimal Python environment","Downloads Python from python.org","Creates a Python virtual environment"], ans: 1, exp: "FROM sets the base image. python:3.12.2-slim is a pre-built image from Docker Hub that includes Python 3.12.2 with a minimal Debian base (~130MB). Subsequent instructions build on top of this." },
+  { q: "What does 'WORKDIR /app' do in a Dockerfile?", opts: ["Creates /app on the host machine","Sets /app as the working directory inside the container — subsequent COPY and RUN commands execute relative to /app","Mounts a volume at /app","Exposes /app to the host"], ans: 1, exp: "WORKDIR sets the working directory inside the container for all subsequent instructions (RUN, COPY, CMD, ENTRYPOINT). If /app doesn't exist, Docker creates it. It's equivalent to 'mkdir -p /app && cd /app'." },
+  { q: "What does 'COPY requirements.txt .' do in a Dockerfile?", opts: ["Copies requirements.txt from the container to the host","Copies requirements.txt from the build context (host) to the current WORKDIR inside the image","Downloads requirements from PyPI","Installs Python packages listed in requirements.txt"], ans: 1, exp: "COPY copies files from the build context (the directory where 'docker build' is run) to the image filesystem. 'COPY requirements.txt .' copies requirements.txt to the current WORKDIR inside the container image." },
+  { q: "What does 'RUN pip install -r requirements.txt' do in a Dockerfile?", opts: ["Runs pip at container startup","Executes 'pip install -r requirements.txt' during the IMAGE BUILD process, installing packages into the image","Runs pip inside a running container","Creates a requirements.txt file"], ans: 1, exp: "RUN executes commands during the IMAGE BUILD phase. The result (installed packages) becomes part of the image layer. This is different from CMD which runs when the container starts." },
+  { q: "What does 'CMD [\"python\", \"app.py\"]' do?", opts: ["Builds the image using python and app.py","Specifies the default command that runs when the container starts — can be overridden at runtime","Copies app.py and runs it during build","Installs Python in the container"], ans: 1, exp: "CMD specifies the default command and arguments to run when a container starts. It can be overridden by the user: 'docker run myimage python other.py' replaces the CMD. Array form (exec form) is preferred over string form." },
+  { q: "What is the key difference between CMD and ENTRYPOINT?", opts: ["CMD runs during build; ENTRYPOINT runs at startup","CMD is the default command and can be fully overridden at runtime; ENTRYPOINT is the main executable and is harder to override — additional arguments replace CMD not ENTRYPOINT","ENTRYPOINT runs during build; CMD runs at startup","They are identical"], ans: 1, exp: "CMD: fully replaceable at runtime. 'docker run myimage other_command' replaces CMD entirely. ENTRYPOINT: the main executable that always runs. At runtime, you can only replace CMD args. ENTRYPOINT + CMD together is a common pattern: ENTRYPOINT [\"gunicorn\"], CMD [\"app:app\"]." },
+  { q: "Why is the 'exec form' (array form) of CMD preferred over 'shell form'?", opts: ["Array form is faster to type","Array form runs the command directly without /bin/sh -c, avoiding shell signal handling issues and ensuring proper PID 1 behavior","Shell form is deprecated","Array form uses less memory"], ans: 1, exp: "Array/exec form CMD [\"cmd\", \"arg\"]: runs directly as PID 1. Signals (SIGTERM) go directly to the process. Shell form CMD \"cmd arg\": runs as /bin/sh -c 'cmd arg' — the shell is PID 1, signals may not reach the app, causing graceful shutdown issues." },
+  { q: "What does 'docker build -t myapp:latest .' do?", opts: ["Pulls myapp:latest from Docker Hub","Builds a Docker image from the Dockerfile in the current directory ('.'), tagging it as myapp:latest","Runs a container named myapp with the latest image","Tests the image myapp:latest"], ans: 1, exp: "docker build: reads the Dockerfile, -t myapp:latest: tags the resulting image as myapp:latest, '.': the build context (current directory, where Docker looks for the Dockerfile and files to COPY)." },
+  { q: "What is 'layer caching' in Docker builds?", opts: ["Storing Docker images in a distributed cache","Docker caches each build step; if a step's inputs haven't changed, Docker reuses the cached layer instead of rebuilding — making subsequent builds much faster","Caching container runtime data for faster startup","Saving Docker images to disk after building"], ans: 1, exp: "Build cache: after each successful build, Docker caches each layer. On the next build, if a layer's instruction and its inputs haven't changed, Docker reuses the cached result — skipping that step. This dramatically speeds up incremental builds." },
+  { q: "When is the build cache invalidated for a layer?", opts: ["Every 24 hours automatically","When the instruction or the files it depends on change — that layer AND all subsequent layers are rebuilt","When Docker is restarted","When the image is pulled from Docker Hub"], ans: 1, exp: "Cache invalidation: when a Dockerfile instruction changes (or the files it copies change), Docker invalidates that layer's cache AND the cache of all layers that come AFTER it in the Dockerfile. This is why order matters." },
+  { q: "Consider this Dockerfile order: COPY . . then RUN pip install -r requirements.txt. What is the problem?", opts: ["'.' is not a valid path","Every time any source file changes, the pip install layer is invalidated and packages are reinstalled — very slow","pip cannot run after COPY","This is the optimal order"], ans: 1, exp: "Bad order: COPY . . copies ALL files first. Any change to ANY file (including source code) invalidates the COPY layer → invalidates all subsequent layers → pip install runs again even though requirements.txt didn't change." },
+  { q: "What is the correct Dockerfile order for a Python app to maximize cache efficiency?", opts: ["FROM → COPY . . → RUN pip install → CMD","FROM → WORKDIR → COPY requirements.txt . → RUN pip install → COPY . . → CMD","FROM → RUN pip install → COPY . . → CMD","FROM → CMD → COPY . . → RUN pip install"], ans: 1, exp: "Optimal order: (1) COPY requirements.txt (stable) → (2) RUN pip install (cached as long as requirements.txt doesn't change) → (3) COPY . . (source code — changes frequently, but only invalidates this layer and CMD). pip install is NOT re-run on code changes." },
+  { q: "What is the difference between COPY and ADD in a Dockerfile?", opts: ["ADD is for directories; COPY is for files only","COPY copies local files/directories; ADD also supports downloading from URLs and auto-extracting tar archives","ADD is deprecated and should never be used","They are identical"], ans: 1, exp: "COPY: copies local files/directories only. Simple and explicit. ADD: copies local files AND can download from URLs AND auto-extracts tar.gz archives. Best practice: prefer COPY for local files; use ADD only when you specifically need URL download or archive extraction." },
+  { q: "Why should you prefer COPY over ADD for most use cases?", opts: ["ADD is slower","COPY is more explicit and predictable — ADD's extra features (URL download, auto-extraction) can cause unexpected behavior and make Dockerfiles harder to understand","ADD creates more layers","COPY is newer and ADD is deprecated"], ans: 1, exp: "The Docker documentation recommends COPY over ADD because COPY's behavior is explicit and simple. ADD's auto-extraction and URL fetching can be surprising. For simple local file copying, COPY is always preferred." },
+  { q: "What does 'ENV PORT=8080' do in a Dockerfile?", opts: ["Exposes port 8080 from the container","Sets an environment variable PORT=8080 that persists into the running container","Documents which port the app uses","Opens port 8080 on the host machine"], ans: 1, exp: "ENV sets environment variables that are baked into the image and available when containers run. ENV PORT=8080 means any process running in the container can read the PORT environment variable and get '8080'." },
+  { q: "What does 'EXPOSE 8080' do in a Dockerfile?", opts: ["Opens port 8080 on the host machine","Maps host port 8080 to container port 8080","Documents/declares that the container listens on port 8080 — does NOT actually publish the port","Blocks all ports except 8080"], ans: 2, exp: "EXPOSE is documentation only — it declares which port the application inside the container uses. It does NOT bind or publish the port. To actually expose the port, use -p 8080:8080 when running the container." },
+  { q: "What does 'USER app' do in a Dockerfile?", opts: ["Creates a user account named 'app'","Sets the user that subsequent Dockerfile instructions and the container process will run as","Gives the 'app' user root privileges","Removes the default root user"], ans: 1, exp: "USER sets the username (or UID) for subsequent RUN, CMD, and ENTRYPOINT instructions and for the running container. Using USER app instead of root reduces security risk — if the container is compromised, the attacker has limited privileges." },
+  { q: "Why is running containers as root a security risk?", opts: ["Root containers use more CPU","A process running as root inside the container also runs as root on the Docker host — a compromised container could give attackers root access to the host","Root containers can't access the internet","Root containers cannot use volumes"], ans: 1, exp: "Docker's default is to run as root. Since container root maps to host root, if an attacker exploits a vulnerability in the container, they potentially gain root access to the host system. Always run containers with a non-root user using USER instruction." },
+  { q: "How do you create a non-root user in a Dockerfile?", opts: ["FROM non-root-python","RUN addgroup --system app && adduser --system --group app, then USER app","USER nobody","RUN useradd -m appuser && USER root"], ans: 1, exp: "Best practice: RUN addgroup --system app && adduser --system --group app creates a system user/group named 'app'. Then USER app switches to this user. All subsequent instructions and container processes run as this non-privileged user." },
+  { q: "What is 'One Process Per Container' best practice?", opts: ["Run all services in a single container for simplicity","Each container should run a single service/process — easier to scale, reuse, and manage individual services","Each container can only have one file","One container should serve only one user at a time"], ans: 1, exp: "One Process Per Container: if you have a web server + database + cache, run each in a separate container. Benefits: (1) scale individual services independently, (2) restart only the failed service, (3) reuse images across projects, (4) simpler debugging." },
+  { q: "What does 'docker history myapp:latest' show?", opts: ["The git commit history for myapp","The build history of the image — all layers with their sizes, commands, and timestamps","The run history of containers using myapp","The push history to Docker Hub"], ans: 1, exp: "docker history shows all layers in an image: IMAGE (layer ID), CREATED, CREATED BY (Dockerfile instruction), SIZE (how much disk space that layer adds). Useful for understanding image composition and identifying which layers contribute most to image size." },
+  { q: "Which instructions create new layers in a Docker image?", opts: ["FROM, WORKDIR, CMD","RUN, COPY, and ADD","All Dockerfile instructions","Only RUN"], ans: 1, exp: "Only RUN, COPY, and ADD create new layers that increase image size. FROM creates the initial layer. WORKDIR, ENV, EXPOSE, CMD, ENTRYPOINT, USER set metadata but don't add size in the same way. Minimize RUN/COPY/ADD for smaller images." },
+  { q: "Why should you minimize the number of layers in a Docker image?", opts: ["More layers make Docker build slower","Each RUN/COPY/ADD layer increases image size since layers are cached and stacked; fewer layers = smaller image","Fewer layers means faster container startup","Docker has a maximum layer limit of 10"], ans: 1, exp: "Each RUN, COPY, and ADD instruction creates a new layer that contributes to total image size (layers are additive). Combining multiple RUN commands with && reduces layer count and image size: RUN apt-get update && apt-get install -y netcat (1 layer instead of 2)." },
+  { q: "How do you combine two RUN commands into one layer?", opts: ["RUN command1; RUN command2","RUN command1 && command2","RUN [command1, command2]","RUNALL command1 command2"], ans: 1, exp: "Use && to chain commands in a single RUN instruction: RUN apt-get update && apt-get install -y netcat. This creates ONE layer instead of two. Use \\ for line continuation in long commands: RUN apt-get update && \\ apt-get install -y netcat git curl." },
+  { q: "What is the 'python:3.12.2-slim' base image?", opts: ["Python 3.12.2 with only the slim Python modules","A minimal Debian-based Python 3.12.2 image (~130MB) — a good balance of size and compatibility for production","Python with no standard libraries","A Python image for slimming down your code"], ans: 1, exp: "The -slim variant is a minimal Debian image with only essential packages, removing docs, test files, and unnecessary tools. At ~130MB, it's much smaller than the full bookworm image (1.02GB) while being compatible with most Python packages including those with C extensions." },
+  { q: "What is the 'python:3.12.2-alpine' base image and when should you use it?", opts: ["Alpine is a mountain-themed Docker image","The smallest Python image variant (~51.8MB) based on Alpine Linux — use it when your app has no C-extension dependencies","A Python image for high-altitude applications","Alpine Python is always the best choice"], ans: 1, exp: "Alpine-based images are tiny (~51.8MB) because Alpine Linux is extremely minimal. However, Alpine uses musl libc instead of glibc, which can cause compatibility issues with some Python packages that use C extensions. Use slim for most cases; alpine for very simple pure-Python apps." },
+  { q: "Why should base images be updated regularly?", opts: ["To get new Docker features","To get security patches — base images regularly receive security updates; outdated images may have known vulnerabilities","To reduce build time","To get smaller image sizes"], ans: 1, exp: "Base images receive regular security patches. If you pin to an old version (e.g., python:3.11.8-slim) and a security vulnerability is found, your containers are exposed. Regularly updating base images (and rebuilding) ensures you get security fixes." },
+  { q: "What does 'docker build -f MyDockerfile -t myapp .' do?", opts: ["Builds from MyDockerfile.txt","Builds using a specific Dockerfile named 'MyDockerfile' (instead of the default 'Dockerfile'), tags it as myapp","Builds myapp from DockerHub","Fails because Dockerfile must be named 'Dockerfile'"], ans: 1, exp: "The -f flag specifies a custom Dockerfile name/path. By default, docker build looks for 'Dockerfile' in the build context. -f MyDockerfile uses 'MyDockerfile' instead. Useful when you have multiple Dockerfiles (e.g., Dockerfile.dev, Dockerfile.prod)." },
+  { q: "What is the build context in 'docker build -t myapp .'?", opts: ["The Docker Hub repository","The current directory ('.') — all files here are sent to Docker Engine during build and are available for COPY instructions","A temporary build environment","The Dockerfile itself"], ans: 1, exp: "The build context (the '.' or a path) is the directory sent to Docker Engine when building. All files in it are available for COPY instructions. Avoid large build contexts — use .dockerignore to exclude unnecessary files (node_modules, .git, etc.)." },
+  { q: "What is a .dockerignore file?", opts: ["A file listing Dockerfiles to exclude","A file listing files/directories to EXCLUDE from the build context — similar to .gitignore","A file Docker cannot read","A file that disables Docker features"], ans: 1, exp: ".dockerignore excludes files from the build context: .git (large history), node_modules (reinstalled in image), *.log (logs), __pycache__ (Python cache). This speeds up builds (smaller context to send) and prevents accidentally copying sensitive files." },
+  { q: "What does 'ARG VERSION=1.0' do in a Dockerfile?", opts: ["Sets an environment variable VERSION=1.0 in the running container","Defines a build-time variable VERSION with default 1.0 — used during build but NOT available in running containers","Creates a version file","Locks the image to version 1.0"], ans: 1, exp: "ARG defines build-time variables. They can be passed at build time: 'docker build --build-arg VERSION=2.0'. Unlike ENV, ARG variables are NOT available in running containers — they exist only during the build process." },
+  { q: "What is the ENTRYPOINT instruction used for?", opts: ["Starting the Docker daemon","Defining the main executable that always runs — runtime arguments replace CMD but not ENTRYPOINT","Setting the entry point for a Docker network","Defining the first layer of an image"], ans: 1, exp: "ENTRYPOINT defines the main executable that always runs when the container starts. Unlike CMD, ENTRYPOINT is not easily overridden. When used with CMD, CMD provides default arguments to ENTRYPOINT. 'docker run myimage extra_arg' passes extra_arg as argument to ENTRYPOINT." },
+  { q: "Given ENTRYPOINT [\"gunicorn\"] and CMD [\"app:app\"], what command runs when the container starts?", opts: ["app:app gunicorn","gunicorn app:app","gunicorn then app:app separately","CMD overrides ENTRYPOINT — only app:app runs"], ans: 1, exp: "ENTRYPOINT + CMD combine: the ENTRYPOINT is the command (gunicorn), CMD provides default arguments (app:app). Result: gunicorn app:app. At runtime, if you provide arguments to docker run, they REPLACE CMD but not ENTRYPOINT: 'docker run myimage api:app' runs 'gunicorn api:app'." },
+  { q: "In the 'docker history' output, what does SIZE 0B mean for a layer?", opts: ["The layer failed to build","Instructions like ENV, WORKDIR, EXPOSE, CMD don't add significant file data — they create metadata layers with 0B size","The layer was compressed to 0B","The layer is empty and should be removed"], ans: 1, exp: "Layers created by ENV, WORKDIR, EXPOSE, ENTRYPOINT, CMD, USER, ARG add metadata to the image configuration but don't add filesystem data — hence 0B size. Only RUN, COPY, and ADD create layers that add to the total image size." },
+  { q: "What is wrong with 'CMD \"python app.py\"' (shell form)?", opts: ["python is not a valid command","Shell form runs via /bin/sh -c, making /bin/sh PID 1 — signals like SIGTERM don't reach python, preventing graceful shutdown","Shell form is not supported in newer Docker versions","Double quotes are not allowed"], ans: 1, exp: "Shell form CMD 'python app.py' becomes /bin/sh -c 'python app.py'. The shell (/bin/sh) is PID 1, not python. When Docker stops the container (SIGTERM), the shell receives it but may not forward it to python — the app doesn't shut down gracefully." },
+  { q: "What is a 'multi-stage build' in Docker?", opts: ["Building images with multiple FROM statements to use different base images for building vs running — results in much smaller final images","Building the same image multiple times","Using multiple Dockerfiles","Running multiple docker build commands"], ans: 0, exp: "Multi-stage builds use multiple FROM statements. Example: FROM python:3.12 AS builder (install dependencies, compile), then FROM python:3.12-slim AS final COPY --from=builder /app /app (only copy what's needed). Result: tiny production image without build tools." },
+  { q: "What does 'RUN addgroup --system app && adduser --system --group app' do?", opts: ["Creates an admin group and admin user","Creates a system group named 'app' and a system user named 'app' in that group — used before USER app for non-root container execution","Adds the 'app' service to Docker","Creates a Docker network named 'app'"], ans: 1, exp: "This creates: (1) a system group 'app' (--system = no login shell, GID in system range), (2) a system user 'app' belonging to group 'app'. Then USER app ensures the container process runs as this non-privileged user instead of root." },
+  { q: "You change one line in your app.py. Which layers are rebuilt (given optimal Dockerfile order)?", opts: ["All layers from FROM onwards","Only the COPY . . layer and CMD layer — requirements.txt hasn't changed so pip install layer is cached","Only the FROM layer","All RUN layers"], ans: 1, exp: "With optimal order: FROM→WORKDIR→COPY requirements.txt→RUN pip install→COPY . .→CMD. Changing app.py only invalidates COPY . . and CMD layers. The pip install layer is still cached because requirements.txt didn't change. This is the key benefit of correct layer ordering." },
+  { q: "What does 'docker build --no-cache -t myapp .' do?", opts: ["Builds without using the network","Forces a fresh build without using any cached layers — all steps are re-executed from scratch","Builds without tagging the image","Creates an image with no layers"], ans: 1, exp: "--no-cache disables the build cache, forcing Docker to re-execute every instruction from scratch. Useful when: (1) you want to ensure the latest package versions, (2) cache is stale/corrupted, (3) debugging cache-related build issues." },
+  { q: "Which base image is recommended to start with during development?", opts: ["Always use alpine for smallest size","Use *-slim flavor — good balance of size and compatibility, avoids constantly updating Dockerfile to add missing system dependencies","Use the full bookworm for maximum compatibility","Build your own base image from scratch"], ans: 1, exp: "The course recommends starting with *-slim (e.g., python:3.12.2-slim) during development. It's small enough (130MB) but includes enough system libraries that most Python packages install without extra apt-get commands. Alpine may require extra work for C-extension packages." },
+  { q: "What does 'COPY . .' mean in a Dockerfile?", opts: ["Copies everything from the container to the host","Copies all files from the build context directory to the current WORKDIR inside the image","Copies dot files only (hidden files)","Means copy nothing — both paths are the same"], ans: 1, exp: "COPY . . means: copy everything (.) from the build context (first '.') to the current WORKDIR inside the image (second '.'). After 'WORKDIR /app', this copies all project files to /app inside the image. Use .dockerignore to exclude unwanted files." },
+  { q: "What is the purpose of keeping frequently-changing files at the END of the Dockerfile?", opts: ["Faster internet downloads","To maximize cache reuse — stable layers (base image, dependencies) are cached; changing layers (source code) are always rebuilt. This minimizes unnecessary rebuilds.","Larger files must go at the end","Docker requires alphabetical ordering"], ans: 1, exp: "Cache reuse strategy: stable → unstable. Put what rarely changes early (FROM, RUN apt-get install), put what changes often late (COPY source code). When code changes, only the last few layers rebuild. The expensive dependency installation stays cached." },
+  { q: "What does 'WORKDIR /app' do if /app doesn't exist?", opts: ["Fails with an error","Docker automatically creates /app — no separate mkdir needed","WORKDIR only works with existing directories","Creates /app on the host machine"], ans: 1, exp: "WORKDIR automatically creates the directory if it doesn't exist — equivalent to mkdir -p /app && cd /app. There's no need to RUN mkdir -p /app before WORKDIR. This also changes the current directory for all subsequent instructions." },
+  { q: "In the context of Dockerfile best practices, what does 'one process per container' solve?", opts: ["Memory allocation issues","Scaling and management: you can independently scale, restart, update, and monitor each service","Security vulnerabilities","Networking complexity"], ans: 1, exp: "One process per container: if web server + db + redis are separate containers, you can: scale web server to 5 instances without scaling db, restart just the crashed redis, update nginx without touching the database. Docker Compose or Kubernetes orchestrates multi-container apps." },
+  { q: "A Dockerfile has: FROM node:18, WORKDIR /app, COPY package.json ., RUN npm install, COPY . ., CMD [\"node\", \"server.js\"]. You change server.js. Which layers rebuild?", opts: ["All layers from FROM","Only 'COPY . .' and 'CMD' — package.json unchanged means npm install stays cached","Only 'RUN npm install' layer","Only 'FROM node:18' layer"], ans: 1, exp: "When server.js changes: FROM (cached) → WORKDIR (cached) → COPY package.json (cached, unchanged) → RUN npm install (CACHED! package.json didn't change) → COPY . . (REBUILT) → CMD (rebuilt). Only the last two layers rebuild — npm install takes seconds not minutes." },
+  { q: "What is the full command to build an image with a specific tag format 'username/appname:v2'?", opts: ["docker build username/appname:v2 .","docker build -t username/appname:v2 .","docker build --tag=username/appname:v2 .","Both B and C are correct"], ans: 3, exp: "Both -t and --tag are equivalent: 'docker build -t username/appname:v2 .' and 'docker build --tag username/appname:v2 .' both produce the same result — an image tagged username/appname:v2. The username/appname format is required for pushing to Docker Hub." },
+  { q: "What does 'FROM python:3.9-alpine' as a base image imply for packages with C extensions?", opts: ["C extensions work better on Alpine","Alpine uses musl libc instead of glibc — some Python packages with C extensions may fail to install or need extra dependencies","Alpine doesn't support Python at all","C extensions are automatically compiled on Alpine"], ans: 1, exp: "Alpine Linux uses musl libc (not glibc). Many Python packages with C extensions are pre-compiled for glibc. On Alpine, they may need to be compiled from source (requiring gcc, build tools) or may not work at all. This is why slim (Debian-based) is often preferred for complex apps." },
+  { q: "What does the 'LABEL' instruction do in a Dockerfile?", opts: ["Labels the build as production","Adds metadata to the image as key-value pairs (e.g., version, author, description)","Creates a network label","Labels a container volume"], ans: 1, exp: "LABEL adds metadata key-value pairs to the image: LABEL version='1.0' author='ramiz' description='my app'. These are visible in 'docker inspect' output. Useful for: version tracking, contact info, and filtering images with docker images --filter." }
+];
+const N = 50;
+let answered = Array(N).fill(false);
+let score = 0;
+function buildQuiz() {
+  const container = document.getElementById('questions');
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    let html = '<div class="q-num">Question ' + (qi+1) + ' of ' + N + '</div><div class="q-text">' + q.q + '</div>';
+    q.opts.forEach((o, oi) => { html += '<div class="option" id="opt-' + qi + '-' + oi + '" onclick="answer(' + qi + ',' + oi + ')"><span class="letter">' + 'ABCD'[oi] + '.</span><span>' + o + '</span></div>'; });
+    html += '<div class="explanation" id="exp-' + qi + '"><strong>Explanation:</strong> ' + q.exp + '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+}
+function answer(qi, oi) {
+  if (answered[qi]) return;
+  answered[qi] = true;
+  const correct = questions[qi].ans;
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('opt-' + qi + '-' + i);
+    if (i === correct) el.classList.add('correct');
+    else if (i === oi) el.classList.add('wrong');
+    el.style.pointerEvents = 'none';
+  });
+  document.getElementById('exp-' + qi).classList.add('show');
+  if (oi === correct) score++;
+  document.getElementById('scorefill').style.width = (score/N*100) + '%';
+  document.getElementById('scoreval').textContent = score + ' / ' + N;
+}
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+buildQuiz();
+</script>
+</body>
+</html>

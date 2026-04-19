@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE 322 — Topic 5: Docker Compose, Networking & Volumes</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 1.75rem 0 0.75rem; }
+  h3 { font-size: 15px; font-weight: 600; margin: 1.2rem 0 0.5rem; }
+  p { font-size: 15px; line-height: 1.75; margin-bottom: 0.65rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+  li { font-size: 14px; line-height: 1.8; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #e8e8e4; padding: 2px 6px; border-radius: 4px; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 13px; overflow-x: auto; margin: 0.75rem 0; font-family: 'SF Mono', monospace; line-height: 1.6; }
+  hr { border: none; border-top: 1px solid #e0e0d8; margin: 1.75rem 0; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.75rem; }
+  .tab-btn { padding: 9px 22px; border-radius: 8px; border: 1.5px solid #d0d0c8; background: #fff; color: #555; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: #1a3a6e; color: #fff; border-color: #1a3a6e; }
+  .tab-btn:hover:not(.active) { background: #f0f0eb; }
+  .section { display: none; } .section.active { display: block; }
+  .info-box { background: #eef4ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  .success-box { background: #f0f9ec; border-left: 4px solid #4caf50; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; margin: 0.85rem 0; font-size: 14px; line-height: 1.65; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 14px; }
+  th { background: #1a3a6e; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #e0e0d8; }
+  tr:nth-child(even) td { background: #f8f8f4; }
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: #fff; border-radius: 10px; border: 1px solid #e0e0d8; }
+  .score-track { flex: 1; height: 8px; background: #e5e5e0; border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; background: #3b7a3b; border-radius: 4px; transition: width 0.4s; width: 0%; }
+  .score-val { font-size: 15px; font-weight: 700; min-width: 60px; text-align: right; }
+  .q-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .q-num { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+  .q-text { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; line-height: 1.5; }
+  .option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e0e0d8; margin-bottom: 8px; cursor: pointer; font-size: 14px; line-height: 1.55; transition: background 0.1s; }
+  .option:hover { background: #f5f5f0; }
+  .option .letter { font-weight: 700; min-width: 20px; color: #555; }
+  .option.correct { background: #f0f9ec; border-color: #4caf50; }
+  .option.correct .letter { color: #2e7d32; }
+  .option.wrong { background: #fff0f0; border-color: #ef9999; }
+  .option.wrong .letter { color: #c62828; }
+  .explanation { display: none; margin-top: 10px; padding: 12px 14px; background: #f8f8f4; border-radius: 8px; font-size: 14px; color: #444; line-height: 1.7; border-left: 4px solid #4caf50; }
+  .explanation.show { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>CSE 322 — Cloud Computing Midterm</h1>
+  <p class="subtitle">Topic 5: Docker Compose, Networking & Volumes</p>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('lesson', this)">Lesson</button>
+    <button class="tab-btn" onclick="switchTab('quiz', this)">Quiz (50 Q)</button>
+  </div>
+  <div id="lesson" class="section active">
+    <h2 style="margin-top:0">1 · Docker Compose</h2>
+    <p><strong>Docker Compose</strong> is a tool for defining and running <strong>multi-container applications</strong> using a YAML file (<code>docker-compose.yml</code> or <code>compose.yml</code>). With a single command, you start all services.</p>
+    <pre>version: '3.8'
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+
+  app:
+    build: .
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:</pre>
+    <div class="info-box"><strong>Key commands:</strong><br>
+      <code>docker compose up</code> — start all services (foreground)<br>
+      <code>docker compose up -d</code> — start in detached (background) mode<br>
+      <code>docker compose down</code> — stop and remove containers and networks<br>
+      <code>docker compose down -v</code> — also remove volumes<br>
+      <code>docker compose logs -f</code> — follow logs from all services<br>
+      <code>docker compose ps</code> — list running services
+    </div>
+    <hr>
+    <h2>2 · docker-compose.yml Structure</h2>
+    <table>
+      <tr><th>Key</th><th>Purpose</th></tr>
+      <tr><td><code>services</code></td><td>Defines each container (service) in the application</td></tr>
+      <tr><td><code>image</code></td><td>Docker image to use for this service</td></tr>
+      <tr><td><code>build</code></td><td>Build from Dockerfile in specified directory (instead of image)</td></tr>
+      <tr><td><code>ports</code></td><td>Port mapping: "hostPort:containerPort"</td></tr>
+      <tr><td><code>environment</code></td><td>Environment variables for the service</td></tr>
+      <tr><td><code>volumes</code></td><td>Volume mounts for persistence</td></tr>
+      <tr><td><code>depends_on</code></td><td>Start this service only after listed services are running</td></tr>
+      <tr><td><code>networks</code></td><td>Attach service to specific Docker networks</td></tr>
+      <tr><td><code>restart</code></td><td>Restart policy: no, always, on-failure, unless-stopped</td></tr>
+    </table>
+    <hr>
+    <h2>3 · Docker Networking</h2>
+    <p>Docker creates an <strong>isolated virtual network</strong> for each application. Containers on the same network can communicate using <strong>container names as hostnames</strong> (Docker's built-in DNS).</p>
+    <pre># Containers on the same network communicate by name:
+# If app service wants to connect to db service:
+DB_HOST=db     # just use the service name!
+DB_PORT=5432   # container's internal port (not host port)
+
+# Docker Compose automatically creates a shared network
+# All services in the same compose file can reach each other by name</pre>
+    <h3>Network Types</h3>
+    <table>
+      <tr><th>Driver</th><th>Use Case</th></tr>
+      <tr><td><code>bridge</code> (default)</td><td>Single-host container communication. Containers on same bridge can communicate by IP or name (with Compose)</td></tr>
+      <tr><td><code>host</code></td><td>Container shares host network — no isolation. Highest performance.</td></tr>
+      <tr><td><code>none</code></td><td>No networking — fully isolated container</td></tr>
+      <tr><td><code>overlay</code></td><td>Multi-host networking — used with Docker Swarm/Kubernetes</td></tr>
+    </table>
+    <div class="success-box"><strong>Compose DNS:</strong> Docker Compose automatically sets up DNS resolution. A service named 'db' is reachable at hostname 'db' from other services. No IP addresses needed — use service names as hostnames.</div>
+    <hr>
+    <h2>4 · Docker Volumes</h2>
+    <p>Container data is <strong>ephemeral</strong> — lost when the container is removed. <strong>Volumes</strong> provide persistent storage that survives container lifecycle.</p>
+    <h3>Types of Volumes</h3>
+    <table>
+      <tr><th>Type</th><th>Syntax</th><th>Description</th></tr>
+      <tr><td><strong>Named Volume</strong></td><td><code>db-data:/var/lib/postgresql/data</code></td><td>Docker manages the storage location. Survives container removal. Best for production data.</td></tr>
+      <tr><td><strong>Host Volume (Bind Mount)</strong></td><td><code>/host/path:/container/path</code></td><td>Directly mounts a host directory. Changes on host appear in container immediately. Best for dev.</td></tr>
+      <tr><td><strong>Anonymous Volume</strong></td><td><code>/var/lib/postgresql/data</code></td><td>Docker generates a random name. Hard to reference. Not recommended for important data.</td></tr>
+    </table>
+    <pre># Named volume (in docker-compose.yml)
+volumes:
+  db-data:/var/lib/postgresql/data
+
+# Host volume (bind mount) — for development
+volumes:
+  - ./app:/app      # current directory ./app → /app in container
+  - ./nginx.conf:/etc/nginx/nginx.conf
+
+# Anonymous volume — Docker manages
+volumes:
+  - /var/lib/postgresql/data</pre>
+    <div class="info-box"><strong>Named volumes vs bind mounts:</strong> Named volumes are managed by Docker (stored in /var/lib/docker/volumes/) — portable, easy backup. Bind mounts link to a specific host path — great for development (live code changes).</div>
+    <hr>
+    <h2>5 · depends_on & Service Ordering</h2>
+    <pre>services:
+  app:
+    build: .
+    depends_on:
+      - db      # app starts after db is running
+
+  db:
+    image: postgres:15</pre>
+    <div class="warn-box"><strong>Note:</strong> <code>depends_on</code> only waits for the container to START — not for the service inside to be READY. Database may still be initializing when app tries to connect. Use health checks or retry logic in your app.</div>
+    <hr>
+    <h2>6 · Environment Variables in Compose</h2>
+    <pre>services:
+  app:
+    image: myapp
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/mydb
+      - SECRET_KEY=mysecretkey
+    env_file:
+      - .env     # load from a .env file (good practice)</pre>
+    <div class="warn-box">Never commit .env files with secrets to git. Use .env.example (without secrets) and add .env to .gitignore.</div>
+    <hr>
+    <h2>7 · Container Registries</h2>
+    <p>Container images are stored and distributed via <strong>registries</strong>:</p>
+    <table>
+      <tr><th>Registry</th><th>Type</th><th>Notes</th></tr>
+      <tr><td>Docker Hub</td><td>Public</td><td>Default registry; free tier available</td></tr>
+      <tr><td>AWS ECR</td><td>Private</td><td>Integrated with AWS services; pay per storage</td></tr>
+      <tr><td>GitHub Container Registry</td><td>Both</td><td>Integrated with GitHub Actions/repos</td></tr>
+      <tr><td>Azure Container Registry</td><td>Private</td><td>Integrated with Azure services</td></tr>
+      <tr><td>Self-hosted</td><td>Private</td><td>Run your own registry server</td></tr>
+    </table>
+    <div style="margin-top:1.5rem"><button class="tab-btn" onclick="switchTab('quiz', this)">Go to Quiz →</button></div>
+  </div>
+  <div id="quiz" class="section">
+    <div class="score-row"><span style="font-size:14px;font-weight:600;min-width:55px">Score</span><div class="score-track"><div class="score-fill" id="scorefill"></div></div><span class="score-val" id="scoreval">0 / 50</span></div>
+    <div id="questions"></div>
+  </div>
+</div>
+<script>
+const questions = [
+  { q: "What is Docker Compose?", opts: ["A tool for orchestrating containers across multiple servers","A tool for defining and running multi-container applications using a YAML configuration file","A Docker image for compose music","A monitoring tool for Docker containers"], ans: 1, exp: "Docker Compose is a tool that lets you define a multi-container application in a single YAML file (docker-compose.yml) and start all services with 'docker compose up'. It handles networking, volumes, and service dependencies automatically." },
+  { q: "What is the name of the Docker Compose configuration file?", opts: ["docker.yml","dockerfile.yml","docker-compose.yml (or compose.yml)","docker-config.yaml"], ans: 2, exp: "The default configuration file is docker-compose.yml (or the newer compose.yml). It defines services, networks, and volumes in YAML format. Docker Compose reads this file when you run 'docker compose up'." },
+  { q: "What does 'docker compose up -d' do?", opts: ["Downloads all compose images","Starts all services defined in docker-compose.yml in detached (background) mode","Updates Docker Compose to the latest version","Undoes the previous compose command"], ans: 1, exp: "docker compose up: reads docker-compose.yml and starts all services. -d: detached mode — runs in background, returns terminal to user. Without -d, output from all services streams to the terminal." },
+  { q: "What does 'docker compose down' do?", opts: ["Stops only the first service","Stops and removes all containers and networks created by 'docker compose up'","Removes all Docker volumes","Downgrades Docker Compose"], ans: 1, exp: "docker compose down stops and removes: all containers created by the compose file, and the networks created. It does NOT remove volumes by default (to preserve data). Use 'docker compose down -v' to also remove volumes." },
+  { q: "What does 'docker compose down -v' do differently from 'docker compose down'?", opts: ["Removes volumes as well as containers and networks","Verbose output mode","Validates the compose file","Removes Docker images"], ans: 0, exp: "The -v flag tells docker compose down to also remove the volumes declared in the compose file. Without -v, volumes (and their data) are preserved. Use -v when you want a complete cleanup including database data." },
+  { q: "What does the 'depends_on' key in docker-compose.yml do?", opts: ["Makes services share the same volume","Specifies that a service should only start after the listed services have started","Makes services use the same network","Defines which services can see each other"], ans: 1, exp: "depends_on creates startup ordering: 'app: depends_on: [db]' means Docker starts db first, then app. Important caveat: depends_on only waits for the container to start, NOT for the service inside to be ready (e.g., Postgres may still be initializing)." },
+  { q: "In a docker-compose.yml, if the 'app' service has 'DB_HOST=db', how does 'app' reach the 'db' service?", opts: ["Via the host machine's IP address","Via Docker's built-in DNS — 'db' resolves to the db container's IP on the shared Docker network","Via a fixed IP address you must manually configure","Via the host's /etc/hosts file"], ans: 1, exp: "Docker Compose creates a shared network for all services. Each service is reachable by its service name as a hostname. So 'db' in 'DB_HOST=db' resolves to the db container's IP automatically via Docker's internal DNS — no IP configuration needed." },
+  { q: "What does the 'build: .' key do in a docker-compose.yml service?", opts: ["Downloads the build from Docker Hub","Builds the Docker image from the Dockerfile in the current directory ('.') instead of using a pre-built image","Copies the current directory into the container","Runs npm run build inside the container"], ans: 1, exp: "'build: .' tells Compose to build the image from the Dockerfile in the current directory ('.') rather than pulling a pre-built image. You can also specify 'build: context: . dockerfile: Dockerfile.prod' for more control." },
+  { q: "What is the purpose of Docker volumes?", opts: ["To share CPU between containers","To provide persistent storage that survives container removal — container data is otherwise ephemeral","To speed up container networking","To share environment variables between containers"], ans: 1, exp: "Container data is ephemeral — when a container is removed, all data written inside it is lost. Volumes are managed storage that persists beyond the container lifecycle. Critical for: databases, uploaded files, logs — any data that must survive container restarts/removals." },
+  { q: "What is a named volume in Docker?", opts: ["A volume with a DNS name","A volume managed by Docker with a human-readable name; Docker stores it in /var/lib/docker/volumes/ and it persists independently of containers","A volume that is shared between multiple machines","A volume named after the container"], ans: 1, exp: "Named volumes: 'docker volume create mydata' or in compose 'volumes: mydata:/container/path'. Docker manages the storage location. They persist after container removal and can be attached to new containers. Best for production databases and persistent app data." },
+  { q: "What is a bind mount (host volume) in Docker?", opts: ["Mounting a USB drive into a container","Mounting a specific directory from the host filesystem directly into the container — changes in either location appear in both","A volume shared between two containers","A read-only volume for configuration files"], ans: 1, exp: "Bind mounts: '-v /host/path:/container/path' or in compose '- ./app:/app'. The host directory is directly mounted into the container. Changes on the host appear immediately inside the container. Perfect for development: edit code on host, see changes in running container instantly." },
+  { q: "What is an anonymous volume in Docker?", opts: ["A volume without any data","A volume Docker creates with a randomly generated name — hard to reference later, not recommended for important data","A volume accessible without authentication","A temporary in-memory volume"], ans: 1, exp: "Anonymous volumes: '-v /container/path' (no host path, no name). Docker generates a random ID. Since you don't know its name, it's hard to reference, share, or manage. They accumulate and waste space. Use named volumes for important data instead." },
+  { q: "What does './app:/app' mean as a volume mount in docker-compose.yml?", opts: ["Copy ./app to /app inside the container at build time","Bind mount: the ./app directory on the host is mounted at /app in the container — live sync for development","Create a named volume called app","Mount the container's /app to the host's ./app"], ans: 1, exp: "This is a bind mount (host volume). The host directory './app' (relative to docker-compose.yml location) is mounted at '/app' inside the container. Both paths point to the same files — changes in either location appear in both immediately. Perfect for live development." },
+  { q: "What is the difference between named volumes and bind mounts?", opts: ["Named volumes are faster; bind mounts use more CPU","Named volumes: Docker manages location, portable, good for production data. Bind mounts: you specify host path, perfect for development (live code sync)","They are identical, just different syntax","Bind mounts are for Windows; named volumes are for Linux"], ans: 1, exp: "Named volumes: Docker controls where data is stored (/var/lib/docker/volumes/). Portable, easy to backup with docker run --volumes-from. Bind mounts: you specify the exact host path. Great for dev (instant code sync). Less portable because path varies per machine." },
+  { q: "How do containers on the same Docker Compose network communicate?", opts: ["Via the host machine's external IP","Via container name as hostname — Docker's internal DNS resolves service names to container IPs on the shared bridge network","Via port forwarding through the host","Via the docker0 IP address manually"], ans: 1, exp: "Docker Compose creates a bridge network for all services. Docker's embedded DNS server resolves service names to container IPs. So 'app' service can reach 'db' service at hostname 'db' — without knowing the actual IP, which changes between restarts." },
+  { q: "What does the 'ports' key in docker-compose.yml do?", opts: ["Opens ports between containers","Maps host ports to container ports — same as docker run -p","Sets which ports can be exposed to the internet","Lists which ports Docker Engine uses"], ans: 1, exp: "The 'ports' key maps host ports to container ports: '- \"8080:80\"' maps host port 8080 to container port 80. Without this, the container's port is only accessible within the Docker network, not from the host or internet." },
+  { q: "What is the 'environment' key in docker-compose.yml?", opts: ["Sets the deployment environment (dev/prod)","Sets environment variables inside the container — equivalent to docker run -e","Specifies which Linux environment to use","Configures the development tools available"], ans: 1, exp: "The 'environment' key sets environment variables in the container: 'environment: - DB_HOST=db - DB_PORT=5432'. This is equivalent to 'docker run -e DB_HOST=db -e DB_PORT=5432'. Variables are accessible to the application running in the container." },
+  { q: "What is the 'env_file' key in docker-compose.yml?", opts: ["Specifies which programming language to use","Loads environment variables from a file (like .env) into the container","Specifies the environment where Docker runs","Creates environment variables in a file"], ans: 1, exp: "'env_file: - .env' loads environment variables from the .env file into the container. This keeps secrets (passwords, API keys) out of the docker-compose.yml file. The .env file should be in .gitignore — never committed to version control." },
+  { q: "What is the 'restart' policy in docker-compose.yml?", opts: ["How often to check container health","When and how Docker should automatically restart a stopped container: no, always, on-failure, unless-stopped","How to restart the Docker daemon","The container's boot order"], ans: 1, exp: "restart policy options: 'no' (never auto-restart, default), 'always' (always restart, including Docker daemon restart), 'on-failure' (restart only on non-zero exit code), 'unless-stopped' (always restart unless manually stopped). Use 'unless-stopped' for production services." },
+  { q: "What is the Docker 'bridge' network driver?", opts: ["A network that bridges two cloud providers","The default network driver — creates a private internal network on the host; containers on the same bridge can communicate","A network that connects containers to physical network hardware","A network that works only between hosts"], ans: 1, exp: "The bridge driver creates a private internal network on the Docker host. Containers on the same bridge network can communicate with each other. Docker Compose uses bridge by default. The default bridge (docker0) is created automatically; Compose creates named bridges per compose file." },
+  { q: "What is the 'host' network driver in Docker?", opts: ["The network used to connect to Docker Hub","The container shares the host machine's network stack — no network isolation, highest network performance, but removes container network isolation","A network that requires a dedicated host","The internal Docker management network"], ans: 1, exp: "With 'network_mode: host', the container uses the host's network directly — no NAT, no port mapping needed (the container's ports ARE the host's ports). Highest performance for network-intensive applications. Downside: no network isolation." },
+  { q: "Why would you use Docker networking isolation for containers?", opts: ["To make containers run faster","Security and organization: containers can only communicate with services on the same network; frontend network vs backend network separation prevents frontend from directly accessing the database","To reduce storage usage","To improve build speed"], ans: 1, exp: "Network isolation: create separate networks for frontend and backend. Frontend can reach app server; app server can reach database. But frontend CANNOT directly reach database — it must go through app server. This defense-in-depth approach limits attack surface." },
+  { q: "What does 'docker compose logs -f' do?", opts: ["Formats logs as JSON","Follows (tails) logs from ALL services in real time — equivalent to docker logs -f for each service","Shows only error logs","Shows only the last log entry"], ans: 1, exp: "docker compose logs -f follows log output from all services simultaneously, with each line prefixed by the service name. Very useful for debugging multi-container applications where you want to see all logs together. Ctrl+C to stop." },
+  { q: "What does 'docker compose ps' show?", opts: ["All Docker containers on the system","Status of services defined in the current docker-compose.yml — name, state, ports","All Docker images","Docker Compose version information"], ans: 1, exp: "docker compose ps shows a table of the services in your docker-compose.yml with their current state (running, exited, etc.) and port mappings. Unlike plain 'docker ps' which shows ALL containers, this scopes to just your compose project's services." },
+  { q: "In docker-compose.yml, what does the top-level 'volumes:' section (outside services) do?", opts: ["Lists all bind mounts on the system","Declares named volumes that Docker creates and manages — referenced in services","Sets default volume drivers","Removes all existing volumes"], ans: 1, exp: "The top-level 'volumes:' section declares named volumes. Example: 'volumes: db-data:' declares 'db-data' as a named volume. Services can then reference it as 'volumes: - db-data:/var/lib/postgresql/data'. Docker creates the volume if it doesn't exist." },
+  { q: "What does 'docker volume ls' show?", opts: ["All running containers with volumes","All Docker volumes on the system (named, anonymous) with their driver and name","Volume disk usage statistics","Volumes mounted to currently running containers only"], ans: 1, exp: "docker volume ls lists all volumes managed by Docker on the local system: DRIVER (type, e.g., local) and VOLUME NAME. Shows both named volumes (created explicitly) and anonymous volumes (random names starting with hex string)." },
+  { q: "What does 'docker volume inspect db-data' show?", opts: ["The contents of the db-data volume","Detailed information about the volume: driver, mount point on host, creation date, labels","Which containers are currently using the volume","The size of the volume"], ans: 1, exp: "docker volume inspect shows JSON details about a volume: Name, Driver, Mountpoint (actual host path, e.g., /var/lib/docker/volumes/db-data/_data), CreatedAt, Labels, Options. Useful for finding where Docker is actually storing the data." },
+  { q: "What command removes all unused Docker volumes?", opts: ["docker volume rm all","docker volume prune","docker system clean volumes","docker rm -v all"], ans: 1, exp: "docker volume prune removes all volumes NOT currently used by any container. This frees up disk space taken by orphaned volumes. Use carefully — deleted volumes lose their data permanently. Add -f to skip confirmation prompt." },
+  { q: "A PostgreSQL container uses 'volumes: - db-data:/var/lib/postgresql/data'. What happens when the container is removed and a new one created with the same volume?", opts: ["The data is permanently lost","The new container finds the existing data in the named volume — database state is preserved","The volume is automatically deleted","The new container must be initialized from a backup"], ans: 1, exp: "Named volumes persist beyond container lifecycle. When you 'docker compose down' (without -v), the 'db-data' volume remains. When you 'docker compose up' again, the new postgres container mounts the same volume and finds all existing data. This is how production databases survive container updates." },
+  { q: "What is the 'overlay' network driver used for?", opts: ["Overlaying container filesystems","Multi-host networking — connecting containers across multiple Docker hosts, used with Docker Swarm and Kubernetes","Making container networks invisible","Overlapping IP address ranges"], ans: 1, exp: "Overlay networks span multiple Docker hosts. When you have a Docker Swarm cluster (multiple machines), overlay networks allow containers on different machines to communicate as if they were on the same local network. Used for production multi-host deployments." },
+  { q: "How does docker-compose.yml differ from running multiple 'docker run' commands?", opts: ["docker-compose.yml is slower","docker-compose.yml defines the entire multi-service architecture in one file — single command to start/stop everything, automatic networking, and dependency management","They are identical in functionality","docker run is always preferred over compose"], ans: 1, exp: "Multiple docker run commands are: error-prone, hard to manage, don't automatically network containers together. docker-compose.yml: declares entire app in one file, one command to start/stop all, auto-creates networks, handles dependencies, easier to version control and share." },
+  { q: "What does 'image: postgres:15' in a service definition do?", opts: ["Builds postgres from a local Dockerfile","Uses the pre-built postgres version 15 image from Docker Hub — no build step needed","Installs PostgreSQL 15 from apt","Creates a postgres volume"], ans: 1, exp: "When you specify 'image: postgres:15', Docker Compose pulls and uses the official postgres:15 image from Docker Hub (or local cache). This is used instead of 'build:' when you want to use a pre-built image rather than building your own." },
+  { q: "What is a container registry?", opts: ["A Docker container running a registration service","A storage and distribution system for Docker images — push images to share them, pull images to use them","A list of all running containers","A Docker monitoring service"], ans: 1, exp: "A container registry stores Docker images and distributes them. You push images to share them; you pull images to use them. Docker Hub is the default public registry. AWS ECR, Azure ACR, GitHub Container Registry are examples of other registries (often private)." },
+  { q: "What does 'docker compose up --build' do?", opts: ["Builds images without starting containers","Starts services and forces a rebuild of all images defined with 'build:' before starting","Builds images faster","Only builds images that have changed"], ans: 1, exp: "'docker compose up --build' forces Docker Compose to rebuild all images defined with 'build:' before starting. Without --build, Compose uses cached images. Use --build when you've changed your Dockerfile or source code and want to ensure the latest image is used." },
+  { q: "In docker-compose.yml, what does 'network_mode: host' do for a service?", opts: ["Connects the service to the host Wi-Fi","The container shares the host's network stack — no port mapping needed, highest network performance","Allows the service to access host-only resources","Makes the service use host DNS only"], ans: 1, exp: "'network_mode: host' makes the container use the host machine's network directly. Ports the container listens on are the same ports on the host — no -p mapping needed. Gives highest network performance but removes container network isolation." },
+  { q: "What does 'docker compose exec app bash' do?", opts: ["Builds the app service and opens bash","Opens an interactive bash shell inside the running 'app' service container — similar to 'docker exec -it app bash'","Executes bash on the host machine","Creates a new app container and runs bash"], ans: 1, exp: "docker compose exec app bash: exec = run command in running service container, app = the service name from docker-compose.yml, bash = command to run. Equivalent to 'docker exec -it <container-id> bash' but using the service name from compose." },
+  { q: "What does 'docker compose restart app' do?", opts: ["Restarts Docker Compose itself","Restarts only the 'app' service container without affecting other services","Rebuilds and restarts the app","Restarts all services in the compose file"], ans: 1, exp: "docker compose restart app: restarts only the named service (app) without affecting other running services (db, redis, etc.). Useful when you need to reload configuration for one service without downtime of the entire application stack." },
+  { q: "What is the significance of port '5432' in 'DB_PORT=5432' when containers communicate internally?", opts: ["5432 is the Docker standard port","5432 is PostgreSQL's internal container port — when containers communicate within Docker network, they use container ports, NOT host-mapped ports","5432 is a randomly assigned port","5432 is the Docker daemon port"], ans: 1, exp: "Within a Docker network, containers communicate using each other's container ports directly — not the host-mapped ports. PostgreSQL listens on 5432 inside its container. Even if host port is 5433 (to avoid conflicts), app containers use 5432 to connect to db service." },
+  { q: "What is a .env file in the context of Docker Compose?", opts: ["A file Docker automatically builds","A file containing environment variables that Docker Compose automatically loads — used to parameterize the docker-compose.yml without hardcoding values","A file that configures Docker Engine itself","A Dockerfile for environment setup"], ans: 1, exp: "A .env file in the same directory as docker-compose.yml is automatically loaded by Compose for variable substitution: in docker-compose.yml, ${DB_PASSWORD} is replaced by the value in .env. This keeps secrets out of docker-compose.yml. Add .env to .gitignore." },
+  { q: "What does 'docker compose scale app=3' (or 'docker compose up --scale app=3') do?", opts: ["Scales the app's CPU to 3 cores","Starts 3 instances of the 'app' service — load balanced within the Docker network","Increases memory to 3GB","Creates 3 separate compose networks"], ans: 1, exp: "Scaling runs multiple instances of a service. 'docker compose up --scale app=3' starts 3 replicas of app. Useful for horizontal scaling. Note: you cannot use 'ports:' mapping with scaling (port conflicts) — use a load balancer or let Compose handle internal routing." },
+  { q: "What is the difference between 'docker compose up' and 'docker compose start'?", opts: ["They are identical","'docker compose up' creates AND starts containers (can also pull images and build); 'docker compose start' only starts previously created containers","'docker compose start' creates containers; 'docker compose up' starts them","'docker compose up' is for production; 'docker compose start' is for development"], ans: 1, exp: "docker compose up: creates containers if they don't exist, then starts them. Can pull images and build. docker compose start: only starts containers that have already been created and stopped. Similar to 'docker run' vs 'docker start' relationship." },
+  { q: "In a Compose file, how do you configure a service to use a custom network?", opts: ["network: my-network","networks: - my-network (in service) and define 'my-network' in top-level networks:","network_id: my-network","connect: my-network"], ans: 1, exp: "To use custom networks in Compose: (1) List networks in the service: 'networks: - frontend'. (2) Declare the network at top level: 'networks: frontend: driver: bridge'. Services on the same named network can communicate; services on different networks cannot." },
+  { q: "What does 'docker network ls' show?", opts: ["All container names on the system","All Docker networks: bridge, host, none, and any user-created networks","All network interfaces on the host","Docker Compose project networks only"], ans: 1, exp: "docker network ls lists all Docker networks: NETWORK ID, NAME, DRIVER, SCOPE. You'll see the default networks (bridge, host, none) plus any user-defined networks (compose creates one per project, named '<project>_default')." },
+  { q: "What does the 'none' network driver do?", opts: ["Removes all networking from Docker","Completely disables networking for the container — fully isolated with no network interfaces","Sets up no default gateway","Only allows localhost communication"], ans: 1, exp: "network_mode: none or --network none disables all networking for a container. The container has no network interfaces (except loopback lo). Useful for maximum security isolation — batch processing jobs that don't need network access." },
+  { q: "How do you backup a Docker named volume?", opts: ["docker volume backup","Run a container that mounts the volume and tars its contents to a bind-mounted host directory","Copy /var/lib/docker/volumes directly","Use docker compose export"], ans: 1, exp: "To backup a named volume: 'docker run --rm -v db-data:/data -v $(pwd):/backup ubuntu tar czf /backup/db-backup.tar.gz /data'. This mounts both the named volume and a host directory, then tars the volume contents to the host. No built-in docker backup command exists." },
+  { q: "What is the purpose of 'image: nginx:latest' and why might ':latest' be problematic in production?", opts: ["':latest' always downloads the newest version which is good","'nginx:latest' pulls the most recent nginx — 'latest' is problematic because it's a floating tag that changes; a future nginx:latest could break your app when you rebuild","':latest' is required syntax","'nginx:latest' means nginx version 1 latest patch"], ans: 1, exp: "':latest' is a floating tag — it points to whatever is 'latest' at pull time. If you rebuild your image 6 months from now, you might get a different nginx version with breaking changes. In production, always pin to specific versions: 'nginx:1.25.3' for reproducible builds." },
+  { q: "What does a 'healthcheck' in docker-compose.yml do?", opts: ["Monitors the host machine's health","Regularly tests if a service is healthy (responsive) — Compose can use this to determine when a service is truly ready, not just started","Checks Docker's memory usage","Sends alerts when a container crashes"], ans: 1, exp: "Health checks periodically run a command inside the container to test if it's working correctly. 'healthcheck: test: [\"CMD\", \"curl\", \"-f\", \"http://localhost\"] interval: 30s'. Compose uses health status for depends_on condition: 'condition: service_healthy'." },
+  { q: "What is 'docker compose config'?", opts: ["Shows Docker Compose version and configuration","Validates and displays the docker-compose.yml with all variable substitutions resolved — useful for debugging","Configures Docker Compose settings","Shows compose project configuration in a GUI"], ans: 1, exp: "docker compose config reads docker-compose.yml, resolves all variable substitutions (from .env file and environment), and prints the final effective configuration. Very useful for debugging: see exactly what Docker Compose will use, including environment variable values." },
+  { q: "Why is it important that containers within a Compose network use service names (not IPs) to communicate?", opts: ["Service names are faster to resolve","Container IPs can change between restarts — service names always resolve to the current container's IP via Docker's internal DNS, making connections reliable","IPs are not supported in Docker networks","Service names are required by Docker's protocol"], ans: 1, exp: "Container IP addresses are dynamic — they can change when containers are stopped and restarted. Docker's embedded DNS always resolves service names to the current container IP. Using service names ensures connections always reach the right container regardless of IP changes." },
+  { q: "What happens to named volumes when 'docker compose down -v' is run?", opts: ["They are backed up automatically","They are permanently deleted along with all their data — use carefully","They are moved to a backup location","They are compressed to save space"], ans: 1, exp: "docker compose down -v removes all named volumes declared in the compose file. This PERMANENTLY deletes all data in those volumes. Useful for: full development environment reset, CI/CD cleanup. WARNING: running this on production databases would delete all your data." },
+  { q: "What is 'docker network create mynetwork' used for?", opts: ["Creates a container named mynetwork","Creates a custom Docker network that can be used to connect containers — either manually or referenced in compose files","Creates a network interface on the host","Creates a VPN connection"], ans: 1, exp: "docker network create mynetwork creates a named Docker network (bridge type by default). You can then connect containers to it: 'docker run --network mynetwork myapp'. In Compose, reference it in the top-level networks section. Custom networks enable organized multi-container communication." }
+];
+const N = 50;
+let answered = Array(N).fill(false);
+let score = 0;
+function buildQuiz() {
+  const container = document.getElementById('questions');
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    let html = '<div class="q-num">Question ' + (qi+1) + ' of ' + N + '</div><div class="q-text">' + q.q + '</div>';
+    q.opts.forEach((o, oi) => { html += '<div class="option" id="opt-' + qi + '-' + oi + '" onclick="answer(' + qi + ',' + oi + ')"><span class="letter">' + 'ABCD'[oi] + '.</span><span>' + o + '</span></div>'; });
+    html += '<div class="explanation" id="exp-' + qi + '"><strong>Explanation:</strong> ' + q.exp + '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+}
+function answer(qi, oi) {
+  if (answered[qi]) return;
+  answered[qi] = true;
+  const correct = questions[qi].ans;
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('opt-' + qi + '-' + i);
+    if (i === correct) el.classList.add('correct');
+    else if (i === oi) el.classList.add('wrong');
+    el.style.pointerEvents = 'none';
+  });
+  document.getElementById('exp-' + qi).classList.add('show');
+  if (oi === correct) score++;
+  document.getElementById('scorefill').style.width = (score/N*100) + '%';
+  document.getElementById('scoreval').textContent = score + ' / ' + N;
+}
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+buildQuiz();
+</script>
+</body>
+</html>
